@@ -9,7 +9,7 @@
    Anything starting with http is treated as an endpoint, anything else as
    an access key. Until it is set the form says it is not connected rather
    than claiming a message was sent. */
-const CONTACT_TARGET = '';
+const CONTACT_TARGET = '718bf97d-0c9d-4013-bfb8-9d79faa4228c';
 
 const WEB3FORMS = 'https://api.web3forms.com/submit';
 const usesEndpoint = /^https?:\/\//i.test(CONTACT_TARGET);
