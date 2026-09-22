@@ -1,10 +1,18 @@
-/* The site is static, so submissions go to a third-party form endpoint.
-   Web3Forms takes a key tied to the address you want the mail delivered to;
-   get one at https://web3forms.com (an email, no account) and paste it below.
-   Until it is set the form says so rather than claiming a message was sent. */
-const ACCESS_KEY = '';
+/* The site is static, so submissions go through a form service. Paste
+   EITHER of these into CONTACT_TARGET and it works out which it is:
 
-const ENDPOINT = 'https://api.web3forms.com/submit';
+     · a Web3Forms access key  — a long id like "a1b2c3d4-...", which they
+       email you after you enter your address at web3forms.com
+     · a Formspree endpoint    — the URL they give you for a form, like
+       "https://formspree.io/f/abcdwxyz"
+
+   Anything starting with http is treated as an endpoint, anything else as
+   an access key. Until it is set the form says it is not connected rather
+   than claiming a message was sent. */
+const CONTACT_TARGET = '';
+
+const WEB3FORMS = 'https://api.web3forms.com/submit';
+const usesEndpoint = /^https?:\/\//i.test(CONTACT_TARGET);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -78,9 +86,9 @@ export function initContactForm() {
       return;
     }
 
-    if (!ACCESS_KEY) {
+    if (!CONTACT_TARGET) {
       setNote(note, 'El formulario aún no está conectado. Escríbenos por Instagram mientras tanto.', 'error');
-      console.warn('[contacto] Falta ACCESS_KEY en src/lib/contact.js — el mensaje no se ha enviado.');
+      console.warn('[contacto] Falta CONTACT_TARGET en src/lib/contact.js — el mensaje no se ha enviado.');
       return;
     }
 
@@ -90,28 +98,39 @@ export function initContactForm() {
     setNote(note, 'Transmitiendo…', 'sending');
 
     try {
-      const res = await fetch(ENDPOINT, {
+      const name = fields.name.value.trim();
+      const email = fields.email.value.trim();
+      const message = fields.message.value.trim();
+
+      const res = await fetch(usesEndpoint ? CONTACT_TARGET : WEB3FORMS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          access_key: ACCESS_KEY,
-          subject: `AREA69 — mensaje de ${fields.name.value.trim()}`,
-          from_name: 'Web AREA69',
-          name: fields.name.value.trim(),
-          email: fields.email.value.trim(),
-          message: fields.message.value.trim(),
-        }),
+        body: JSON.stringify(
+          usesEndpoint
+            ? { name, email, message, _subject: `AREA69 — mensaje de ${name}` }
+            : {
+                access_key: CONTACT_TARGET,
+                subject: `AREA69 — mensaje de ${name}`,
+                from_name: 'Web AREA69',
+                name,
+                email,
+                message,
+              }
+        ),
       });
       const data = await res.json().catch(() => ({}));
 
-      if (res.ok && data.success) {
+      /* The two services disagree on what success looks like: Web3Forms
+         answers {success:true}, Formspree {ok:true} or an errors array. */
+      const sent = res.ok && data.success !== false && !data.errors;
+      if (sent) {
         setNote(note, 'Señal recibida. Te contactamos pronto.', 'ok');
         form.reset();
       } else {
         /* The service answers in English with things like "Invalid access
            key" — useful to whoever maintains the site, meaningless and
            alarming to whoever is trying to write to them. */
-        console.error('[contacto] El servicio rechazó el envío:', data.message || res.status);
+        console.error('[contacto] El servicio rechazó el envío:', data.message || data.errors?.[0]?.message || res.status);
         setNote(note, 'No hemos podido enviarlo. Inténtalo de nuevo en un momento.', 'error');
       }
     } catch {
