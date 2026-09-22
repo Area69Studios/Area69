@@ -3,9 +3,9 @@ import { gsap } from 'gsap';
 /* The mark is the progress bar: red ink rises through the letterforms and
    the logo develops out of its own outline. The surface is a real wave, so
    it reads as liquid rather than as a bar with a straight top edge. */
-const POINTS = 14;
+const POINTS = 18;
 const WAVE = 2.2;   // % of the mark's height
-const SPEED = 3.4;  // radians per second
+const SPEED = 1.9;  // radians per second
 
 function inkPath(level, t) {
   // level: 0 empty, 1 full. y is measured from the top in clip-path space.
@@ -49,38 +49,45 @@ export function runPreloader() {
     // the wave keeps moving even where the level pauses
     const waveTicker = gsap.to(state, { t: 100, duration: 100, ease: 'none' });
 
+    /* Painting is a repaint of a 620px text layer, so it stops the moment
+       the level tops out — nothing changes after that, and the exit needs
+       every frame it can get for the transform. */
+    let painting = true;
     const paint = () => {
+      if (!painting) return;
       fill.style.clipPath = inkPath(state.v / 100, state.t);
       count.textContent = String(Math.round(state.v)).padStart(3, '0');
     };
     gsap.ticker.add(paint);
 
     gsap.timeline()
-      .to(meta, { opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.15)
-      // uneven on purpose: ink poured in surges, not at a constant rate
-      .to(state, { v: 38, duration: 0.55, ease: 'power2.out' }, 0.1)
-      .to(state, { v: 62, duration: 0.42, ease: 'power1.inOut' }, '+=0.08')
-      .to(state, { v: 100, duration: 0.6, ease: 'power2.inOut' }, '+=0.06')
+      .to(meta, { opacity: 1, duration: 0.55, ease: 'power2.out' }, 0.12)
 
-      // the filled mark swells, then rushes past the viewport
-      .to(stage, { scale: 1.05, duration: 0.2, ease: 'power2.out' })
-      .to(meta, { opacity: 0, duration: 0.3, ease: 'power2.in' }, '<')
-      .to(stage, {
-        scale: 7.5,
-        opacity: 0,
-        duration: 0.7,
-        ease: 'power3.in',
-        onStart: () => { gsap.delayedCall(0.28, resolve); },
-      })
+      /* One unbroken rise. This used to climb in three surges with a beat
+         between them, which did not read as pouring — it read as stalling. */
+      .to(state, { v: 100, duration: 1.1, ease: 'power1.inOut' }, 0.12)
+
+      .addLabel('out', '+=0.14')
+      .to(meta, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 'out')
+
+      /* power2.inOut, not expo.inOut. Over a 900px travel expo moves 93px in
+         a single frame at its steepest — a tenth of the distance at once,
+         which the eye reads as a cut rather than a move. This caps it at 30px.
+         The mark trails the panel: two speeds are what give the exit depth. */
       .to(pre, {
-        opacity: 0,
-        duration: 0.5,
+        yPercent: -100,
+        duration: 0.95,
         ease: 'power2.inOut',
-        onComplete: () => {
+        onStart: () => {
+          painting = false;
           gsap.ticker.remove(paint);
+          gsap.delayedCall(0.3, resolve);
+        },
+        onComplete: () => {
           waveTicker.kill();
           finish();
         },
-      }, '-=0.55');
+      }, 'out')
+      .to(stage, { yPercent: -42, duration: 0.95, ease: 'power2.inOut' }, 'out');
   });
 }

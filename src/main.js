@@ -181,11 +181,17 @@ function initContactForm() {
 }
 
 async function boot() {
-  await runPreloader();
+  // Start the loading screen but do not wait on it: everything below is
+  // setup work the loading screen exists to cover. Booting the fluid used
+  // to land 0.3s into the curtain lift, and compiling its shaders blocked
+  // the main thread right as the panel was travelling — the curtain visibly
+  // stalled and jumped. Done here it is behind a still panel, and the fluid
+  // is already alive by the time it is uncovered.
+  const loading = runPreloader();
+
   initSmoothScroll();
   initHeroFluid();
   initNav();
-  heroIntro();
   manifestoScrollytelling();
   servicesReveal();
   workHorizontalScroll();
@@ -196,8 +202,10 @@ async function boot() {
   initMagneticButtons();
   initCardGlow();
   initOutlineFill();
-
   ScrollTrigger.refresh();
+
+  await loading;
+  heroIntro();
 }
 
 boot();
