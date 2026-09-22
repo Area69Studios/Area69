@@ -745,30 +745,33 @@ textarea {
   z-index: 1;
 }
 
-/* Stacked into one column the cards cover almost the whole section, leaving
-   the picture a sliver. Here it becomes a header band instead, fading out
-   where the grid begins. */
+/* Stacked, the section runs past 3000px while the picture is 2.19:1, so
+   stretching it over the whole thing crops it to an unreadable vertical
+   sliver. It covers the header and the first cards instead, showing through
+   them now that they are transparent, and fades out below. */
 @media (max-width: 640px) {
   .servicios-media {
     bottom: auto;
-    height: 440px;
+    height: 800px;
     opacity: 0.42;
-    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 96%);
-    mask-image: linear-gradient(to bottom, #000 52%, transparent 96%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 97%);
+    mask-image: linear-gradient(to bottom, #000 58%, transparent 97%);
   }
 }
 
+/* The separators used to be a solid grid background showing through 1px
+   gaps, which meant the grid painted over the picture. They are card borders
+   now, so the only thing between the image and the eye is the text. */
 .services-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--line);
+  gap: 0;
   margin: 0 clamp(20px, 6vw, 48px);
   border: 1px solid var(--line);
 }
 
 .service-card {
-  background: var(--black-2);
+  background: transparent;
   padding: clamp(24px, 3vw, 40px);
   aspect-ratio: 1 / 1;
   display: flex;
@@ -882,10 +885,25 @@ textarea {
   letter-spacing: 0.06em;
 }
 
+.service-card:not(:last-child) {
+  border-right: 1px solid var(--line);
+}
+
+/* Over the flat card these sat at 5.6:1; over the picture they dropped to
+   4.2, under the 4.5 AA floor. Dimming the image would defeat the point of
+   uncovering it, so the type gives instead. */
+#servicios .service-meta p {
+  color: #9a9aa0;
+}
+
 @media (max-width: 1080px) {
   .services-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  /* two up: verticals on the left column, horizontals under the first row */
+  .service-card:not(:last-child) { border-right: 0; }
+  .service-card:nth-child(odd) { border-right: 1px solid var(--line); }
+  .service-card:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
 }
 
 @media (max-width: 560px) {
@@ -895,6 +913,8 @@ textarea {
   .service-card {
     aspect-ratio: 4 / 3;
   }
+  .service-card:nth-child(odd) { border-right: 0; }
+  .service-card:not(:last-child) { border-bottom: 1px solid var(--line); }
 }
 
 /* ============ PROYECTOS (horizontal scrollytelling) ============ */
