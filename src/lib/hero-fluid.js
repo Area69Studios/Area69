@@ -299,7 +299,6 @@ export function initHeroFluid() {
   }, { passive: true });
 
   // --- scroll fade, same transition out of the hero as before ---
-  let inView = true;
   ScrollTrigger.create({
     trigger: '#hero',
     start: 'top top',
@@ -308,11 +307,20 @@ export function initHeroFluid() {
     onUpdate: (self) => {
       canvas.style.opacity = String(1 - Math.min(self.progress * 1.5, 1));
     },
-    onToggle: (self) => {
-      // no point simulating a fluid nobody can see
-      inView = self.isActive;
-    },
   });
+
+  /* Pause the sim while the hero is off screen. This deliberately does not
+     use the trigger above: its range starts at 'top top', and ScrollTrigger
+     reports isActive false exactly at that boundary — i.e. at the very top
+     of the page — which froze the fluid whenever you scrolled back up. */
+  let inView = true;
+  const heroSection = document.getElementById('hero');
+  if (heroSection && 'IntersectionObserver' in window) {
+    new IntersectionObserver(
+      ([entry]) => { inView = entry.isIntersecting; },
+      { threshold: 0 }
+    ).observe(heroSection);
+  }
 
   function step(dt) {
     advectMat.uniforms.texelSize.value = simTexel;
