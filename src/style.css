@@ -680,8 +680,11 @@ textarea {
 }
 
 .work-viewport {
+  /* clips the track horizontally; the vertical padding keeps the hover
+     lift from being cut off by that same clipping box */
   overflow: hidden;
   width: 100%;
+  padding-block: 24px;
 }
 
 .work-track {
