@@ -127,8 +127,16 @@ void main() {
   vec3 ink = texture2D(uTexture, vUv).rgb;
   float d = distance(vUv, vec2(0.5, 0.6));
   vec3 bg = mix(vec3(0.086, 0.035, 0.039), vec3(0.039, 0.039, 0.043), smoothstep(0.0, 0.72, d));
-  // lift the brightest ink towards white so dense plumes read as hot
-  vec3 col = bg + ink + pow(max(ink - 0.55, 0.0), vec3(1.6)) * 1.4;
+
+  // Saturate smoothly instead of clipping: wherever ink piled up it used to
+  // blow out to a flat white core with a hard edge.
+  vec3 shaped = vec3(1.0) - exp(-ink * 1.5);
+  float lum = max(max(shaped.r, shaped.g), shaped.b);
+  vec3 col = bg + shaped + vec3(pow(lum, 6.0)) * 0.18;
+
+  // the near-black radial banded visibly in 8-bit
+  float n = fract(sin(dot(vUv, vec2(12.9898, 78.233))) * 43758.5453);
+  col += (n - 0.5) * (1.6 / 255.0);
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -146,28 +154,31 @@ export function initHeroFluid() {
 
   const container = canvas.parentElement;
   const small = window.innerWidth < 800;
-  const SIM_RES = small ? 96 : 128;
-  const DYE_RES = small ? 256 : 512;
+  const SIM_SHORT = small ? 96 : 112;
+  const DYE_SHORT = small ? 288 : 400;
   // the pressure solve is most of the per-step cost; a gentle ambient
   // flow does not need a tightly converged projection
-  const PRESSURE_ITERATIONS = small ? 8 : 12;
+  const PRESSURE_ITERATIONS = small ? 12 : 16;
 
   const DENSITY_DISSIPATION = 0.993;
   const VELOCITY_DISSIPATION = 0.988;
   const PRESSURE_DECAY = 0.8;
-  const CURL_STRENGTH = 32;
-  const SPLAT_RADIUS = 0.0022;
+  // high vorticity amplifies grid-scale noise, which showed up as a cellular
+  // speckle rather than smoke; ambient drift does not need much of it
+  const CURL_STRENGTH = 16;
 
-  // the dye buffer is only 512px, so drawing it at 1x costs far less on
-  // a high-DPI screen and looks identical once it is this soft
+  // the dye buffer is small, so drawing it at 1x costs far less on a
+  // high-DPI screen and looks identical once it is this soft
   renderer.setPixelRatio(1);
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.autoClear = true;
 
-  const simTexel = new THREE.Vector2(1 / SIM_RES, 1 / SIM_RES);
+  function aspect() {
+    return Math.max(container.clientWidth, 1) / Math.max(container.clientHeight, 1);
+  }
 
-  function createFBO(size) {
-    return new THREE.WebGLRenderTarget(size, size, {
+  function createFBO(w, h) {
+    return new THREE.WebGLRenderTarget(w, h, {
       type: THREE.HalfFloatType,
       format: THREE.RGBAFormat,
       minFilter: THREE.LinearFilter,
@@ -177,41 +188,59 @@ export function initHeroFluid() {
     });
   }
 
-  function createDoubleFBO(size) {
-    let read = createFBO(size);
-    let write = createFBO(size);
+  function createDoubleFBO(w, h) {
+    let read = createFBO(w, h);
+    let write = createFBO(w, h);
     return {
       get read() { return read; },
       get write() { return write; },
       swap() { const tmp = read; read = write; write = tmp; },
+      dispose() { read.dispose(); write.dispose(); },
     };
   }
 
-  const velocity = createDoubleFBO(SIM_RES);
-  const dye = createDoubleFBO(DYE_RES);
-  const pressure = createDoubleFBO(SIM_RES);
-  const divergence = createFBO(SIM_RES);
-  const curl = createFBO(SIM_RES);
+  /* The grid has to match the canvas proportions. On a square grid stretched
+     across a wide canvas, one unit of velocity moves the fluid further
+     horizontally than vertically, which smeared every plume sideways. */
+  function buildSim() {
+    const ar = aspect();
+    const dims = (short) => (ar >= 1
+      ? { w: Math.round(short * ar), h: short }
+      : { w: short, h: Math.round(short / ar) });
+    const s = dims(SIM_SHORT);
+    const d = dims(DYE_SHORT);
+    return {
+      ar,
+      velocity: createDoubleFBO(s.w, s.h),
+      dye: createDoubleFBO(d.w, d.h),
+      pressure: createDoubleFBO(s.w, s.h),
+      divergence: createFBO(s.w, s.h),
+      curl: createFBO(s.w, s.h),
+      texel: new THREE.Vector2(1 / s.w, 1 / s.h),
+    };
+  }
+
+  let sim = buildSim();
 
   const mat = (frag, uniforms) =>
     new THREE.ShaderMaterial({ vertexShader: BASE_VERT, fragmentShader: frag, uniforms, depthTest: false, depthWrite: false });
 
   const advectMat = mat(ADVECT_FRAG, {
     uVelocity: { value: null }, uSource: { value: null },
-    texelSize: { value: simTexel }, dt: { value: 0.016 }, dissipation: { value: 1 },
+    texelSize: { value: sim.texel }, dt: { value: 0.016 }, dissipation: { value: 1 },
   });
-  const divergenceMat = mat(DIVERGENCE_FRAG, { uVelocity: { value: null }, texelSize: { value: simTexel } });
-  const curlMat = mat(CURL_FRAG, { uVelocity: { value: null }, texelSize: { value: simTexel } });
+  const divergenceMat = mat(DIVERGENCE_FRAG, { uVelocity: { value: null }, texelSize: { value: sim.texel } });
+  const curlMat = mat(CURL_FRAG, { uVelocity: { value: null }, texelSize: { value: sim.texel } });
   const vorticityMat = mat(VORTICITY_FRAG, {
     uVelocity: { value: null }, uCurl: { value: null },
-    texelSize: { value: simTexel }, curl: { value: CURL_STRENGTH }, dt: { value: 0.016 },
+    texelSize: { value: sim.texel }, curl: { value: CURL_STRENGTH }, dt: { value: 0.016 },
   });
-  const pressureMat = mat(PRESSURE_FRAG, { uPressure: { value: null }, uDivergence: { value: null }, texelSize: { value: simTexel } });
-  const gradientMat = mat(GRADIENT_FRAG, { uPressure: { value: null }, uVelocity: { value: null }, texelSize: { value: simTexel } });
+  const pressureMat = mat(PRESSURE_FRAG, { uPressure: { value: null }, uDivergence: { value: null }, texelSize: { value: sim.texel } });
+  const gradientMat = mat(GRADIENT_FRAG, { uPressure: { value: null }, uVelocity: { value: null }, texelSize: { value: sim.texel } });
   const clearMat = mat(CLEAR_FRAG, { uTexture: { value: null }, value: { value: PRESSURE_DECAY } });
   const splatMat = mat(SPLAT_FRAG, {
     uTarget: { value: null }, aspectRatio: { value: 1 },
-    color: { value: new THREE.Vector3() }, point: { value: new THREE.Vector2() }, radius: { value: SPLAT_RADIUS },
+    color: { value: new THREE.Vector3() }, point: { value: new THREE.Vector2() }, radius: { value: 0.004 },
   });
   const displayMat = mat(DISPLAY_FRAG, { uTexture: { value: null } });
 
@@ -226,65 +255,64 @@ export function initHeroFluid() {
     renderer.render(quadScene, quadCamera);
   }
 
-  function aspect() {
-    return container.clientWidth / Math.max(container.clientHeight, 1);
-  }
-
-  function splat(x, y, dx, dy, r, g, b) {
-    splatMat.uniforms.aspectRatio.value = aspect();
+  function splat(x, y, dx, dy, r, g, b, radius) {
+    splatMat.uniforms.aspectRatio.value = sim.ar;
     splatMat.uniforms.point.value.set(x, y);
-    splatMat.uniforms.radius.value = SPLAT_RADIUS;
+    splatMat.uniforms.radius.value = radius;
 
-    splatMat.uniforms.uTarget.value = velocity.read.texture;
+    splatMat.uniforms.uTarget.value = sim.velocity.read.texture;
     splatMat.uniforms.color.value.set(dx, dy, 0);
-    blit(splatMat, velocity.write);
-    velocity.swap();
+    blit(splatMat, sim.velocity.write);
+    sim.velocity.swap();
 
-    splatMat.uniforms.uTarget.value = dye.read.texture;
+    splatMat.uniforms.uTarget.value = sim.dye.read.texture;
     splatMat.uniforms.color.value.set(r, g, b);
-    blit(splatMat, dye.write);
-    dye.swap();
+    blit(splatMat, sim.dye.write);
+    sim.dye.swap();
   }
 
-  // brand red with a little variation, plus the occasional hot white core
+  // brand red, with the odd warmer splat for variation
   function inkColor() {
-    const hot = Math.random() < 0.18;
-    if (hot) return [0.55, 0.32, 0.28];
-    const v = 0.35 + Math.random() * 0.4;
+    if (Math.random() < 0.16) return [0.5, 0.26, 0.2];
+    const v = 0.3 + Math.random() * 0.35;
     return [v, v * (0.06 + Math.random() * 0.06), v * 0.05];
   }
 
-  /* A drifting source keeps feeding the fluid so the hero is alive before
-     anyone touches it. Ink decays fast, so a periodic burst would leave the
-     canvas empty between bursts — this traces a slow open path instead,
-     laying down a trail that the vorticity curls into plumes. */
-  const auto = { t: Math.random() * 60, x: 0.5, y: 0.5, started: false };
-  function autoFeed(dt) {
-    auto.t += dt;
-    const t = auto.t;
-    const x = 0.5 + 0.36 * Math.sin(t * 0.23) * Math.cos(t * 0.11);
-    const y = 0.5 + 0.32 * Math.sin(t * 0.19 + 1.3);
-    if (auto.started) {
-      const gain = Math.min(dt * 60, 2);
+  /* Several soft emitters spread across the canvas, each pushing in a slowly
+     rotating direction. A single point source painted a narrow trail with a
+     bright head — it read as a moving dot, not as smoke — and stalled into a
+     dense blob wherever its path slowed down. */
+  const emitters = [
+    { cx: 0.22, cy: 0.42, ax: 0.14, ay: 0.20, fx: 0.11, fy: 0.08, px: 0.0, fr: 0.13, pr: 0.0, force: 900 },
+    { cx: 0.78, cy: 0.56, ax: 0.15, ay: 0.18, fx: 0.09, fy: 0.12, px: 2.1, fr: -0.11, pr: 2.4, force: 900 },
+    { cx: 0.5, cy: 0.78, ax: 0.22, ay: 0.12, fx: 0.07, fy: 0.15, px: 4.2, fr: 0.16, pr: 4.1, force: 820 },
+  ];
+
+  let elapsedTime = Math.random() * 40;
+  function ambient(dt) {
+    elapsedTime += dt;
+    const t = elapsedTime;
+    const gain = Math.min(dt * 60, 2);
+    for (const e of emitters) {
+      const x = e.cx + e.ax * Math.sin(t * e.fx + e.px);
+      const y = e.cy + e.ay * Math.sin(t * e.fy + e.px * 0.7);
+      const ang = t * e.fr + e.pr;
       const [r, g, b] = inkColor();
-      splat(x, y, (x - auto.x) * 5200, (y - auto.y) * 5200, r * 0.5 * gain, g * 0.5 * gain, b * 0.5 * gain);
+      const k = 0.17 * gain;
+      splat(x, y, Math.cos(ang) * e.force, Math.sin(ang) * e.force, r * k, g * k, b * k, 0.006);
     }
-    auto.x = x;
-    auto.y = y;
-    auto.started = true;
   }
 
   function openingBurst() {
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2 + Math.random() * 0.4;
-      const rad = 0.14 + Math.random() * 0.16;
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2 + Math.random() * 0.4;
+      const rad = 0.16 + Math.random() * 0.2;
       const x = 0.5 + Math.cos(a) * rad;
-      const y = 0.55 + Math.sin(a) * rad;
+      const y = 0.52 + Math.sin(a) * rad;
       const [r, g, b] = inkColor();
-      splat(x, y, Math.cos(a) * 1800, Math.sin(a) * 1800, r * 1.6, g * 1.6, b * 1.6);
+      splat(x, y, Math.cos(a) * 1500, Math.sin(a) * 1500, r * 1.1, g * 1.1, b * 1.1, 0.008);
     }
   }
-
 
   // --- scroll fade, same transition out of the hero as before ---
   ScrollTrigger.create({
@@ -311,55 +339,62 @@ export function initHeroFluid() {
   }
 
   function step(dt) {
-    advectMat.uniforms.texelSize.value = simTexel;
+    const texel = sim.texel;
+    curlMat.uniforms.texelSize.value = texel;
+    vorticityMat.uniforms.texelSize.value = texel;
+    divergenceMat.uniforms.texelSize.value = texel;
+    pressureMat.uniforms.texelSize.value = texel;
+    gradientMat.uniforms.texelSize.value = texel;
+    advectMat.uniforms.texelSize.value = texel;
 
-    curlMat.uniforms.uVelocity.value = velocity.read.texture;
-    blit(curlMat, curl);
+    curlMat.uniforms.uVelocity.value = sim.velocity.read.texture;
+    blit(curlMat, sim.curl);
 
-    vorticityMat.uniforms.uVelocity.value = velocity.read.texture;
-    vorticityMat.uniforms.uCurl.value = curl.texture;
+    vorticityMat.uniforms.uVelocity.value = sim.velocity.read.texture;
+    vorticityMat.uniforms.uCurl.value = sim.curl.texture;
     vorticityMat.uniforms.dt.value = dt;
-    blit(vorticityMat, velocity.write);
-    velocity.swap();
+    blit(vorticityMat, sim.velocity.write);
+    sim.velocity.swap();
 
-    divergenceMat.uniforms.uVelocity.value = velocity.read.texture;
-    blit(divergenceMat, divergence);
+    divergenceMat.uniforms.uVelocity.value = sim.velocity.read.texture;
+    blit(divergenceMat, sim.divergence);
 
-    clearMat.uniforms.uTexture.value = pressure.read.texture;
-    blit(clearMat, pressure.write);
-    pressure.swap();
+    clearMat.uniforms.uTexture.value = sim.pressure.read.texture;
+    blit(clearMat, sim.pressure.write);
+    sim.pressure.swap();
 
-    pressureMat.uniforms.uDivergence.value = divergence.texture;
+    pressureMat.uniforms.uDivergence.value = sim.divergence.texture;
     for (let i = 0; i < PRESSURE_ITERATIONS; i++) {
-      pressureMat.uniforms.uPressure.value = pressure.read.texture;
-      blit(pressureMat, pressure.write);
-      pressure.swap();
+      pressureMat.uniforms.uPressure.value = sim.pressure.read.texture;
+      blit(pressureMat, sim.pressure.write);
+      sim.pressure.swap();
     }
 
-    gradientMat.uniforms.uPressure.value = pressure.read.texture;
-    gradientMat.uniforms.uVelocity.value = velocity.read.texture;
-    blit(gradientMat, velocity.write);
-    velocity.swap();
+    gradientMat.uniforms.uPressure.value = sim.pressure.read.texture;
+    gradientMat.uniforms.uVelocity.value = sim.velocity.read.texture;
+    blit(gradientMat, sim.velocity.write);
+    sim.velocity.swap();
 
     // dissipation is per-frame, so raise it to the frame's share of a 60Hz
-    // step — otherwise the ink fades twice as fast on a 120Hz display
+    // step — otherwise the ink fades faster on a high refresh rate display
     const decay = dt * 60;
 
     advectMat.uniforms.dt.value = dt;
-    advectMat.uniforms.uVelocity.value = velocity.read.texture;
-    advectMat.uniforms.uSource.value = velocity.read.texture;
+    advectMat.uniforms.uVelocity.value = sim.velocity.read.texture;
+    advectMat.uniforms.uSource.value = sim.velocity.read.texture;
     advectMat.uniforms.dissipation.value = Math.pow(VELOCITY_DISSIPATION, decay);
-    blit(advectMat, velocity.write);
-    velocity.swap();
+    blit(advectMat, sim.velocity.write);
+    sim.velocity.swap();
 
-    advectMat.uniforms.uVelocity.value = velocity.read.texture;
-    advectMat.uniforms.uSource.value = dye.read.texture;
+    advectMat.uniforms.uVelocity.value = sim.velocity.read.texture;
+    advectMat.uniforms.uSource.value = sim.dye.read.texture;
     advectMat.uniforms.dissipation.value = Math.pow(DENSITY_DISSIPATION, decay);
-    blit(advectMat, dye.write);
-    dye.swap();
+    blit(advectMat, sim.dye.write);
+    sim.dye.swap();
   }
 
   let visible = true;
+  let alive = true;
   const clock = new THREE.Clock();
   openingBurst();
 
@@ -370,6 +405,7 @@ export function initHeroFluid() {
   let accumulator = 0;
 
   function frame() {
+    if (!alive) return;
     requestAnimationFrame(frame);
     const elapsed = clock.getDelta();
     if (!visible || !inView) return;
@@ -379,10 +415,10 @@ export function initHeroFluid() {
     const dt = Math.min(accumulator, 0.05);
     accumulator = 0;
 
-    autoFeed(dt);
+    ambient(dt);
     step(dt);
 
-    displayMat.uniforms.uTexture.value = dye.read.texture;
+    displayMat.uniforms.uTexture.value = sim.dye.read.texture;
     blit(displayMat, null);
   }
   frame();
@@ -392,7 +428,29 @@ export function initHeroFluid() {
     clock.getDelta();
   });
 
+  /* A lost context leaves a dead canvas that never repaints. Rather than
+     sit on a frozen frame, stop and uncover the section's CSS background. */
+  canvas.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault();
+    alive = false;
+    canvas.style.display = 'none';
+  });
+
+  let resizeTimer;
   window.addEventListener('resize', () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      // only worth rebuilding when the proportions actually changed
+      if (!alive || Math.abs(aspect() - sim.ar) / sim.ar < 0.1) return;
+      const old = sim;
+      sim = buildSim();
+      old.velocity.dispose();
+      old.dye.dispose();
+      old.pressure.dispose();
+      old.divergence.dispose();
+      old.curl.dispose();
+      openingBurst();
+    }, 250);
   });
 }
