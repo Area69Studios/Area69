@@ -526,13 +526,13 @@ textarea {
   max-width: 46ch;
 }
 
-/* ============ RELEASES ============ */
-#releases {
+/* ============ SERVICIOS ============ */
+#servicios {
   background: var(--black-2);
   padding-bottom: 100px;
 }
 
-.releases-grid {
+.services-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
@@ -541,7 +541,7 @@ textarea {
   border: 1px solid var(--line);
 }
 
-.release-card {
+.service-card {
   background: var(--black-2);
   padding: clamp(24px, 3vw, 40px);
   aspect-ratio: 1 / 1;
@@ -550,10 +550,9 @@ textarea {
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  cursor: pointer;
 }
 
-.release-visual {
+.service-visual {
   flex: 1;
   border-radius: 4px;
   background: radial-gradient(circle at 30% 20%, rgba(var(--rc), 0.35), transparent 60%),
@@ -565,29 +564,29 @@ textarea {
   transition: transform 0.6s var(--ease), border-color 0.4s ease;
 }
 
-.release-index {
+.service-index {
   font-family: var(--font-display);
   font-size: 13px;
   color: rgba(var(--rc), 0.8);
 }
 
-.release-card:hover .release-visual {
+.service-card:hover .service-visual {
   transform: scale(1.04) rotate(-1deg);
   border-color: rgba(var(--rc), 0.6);
 }
 
-.release-meta {
+.service-meta {
   margin-top: 18px;
 }
 
-.release-meta h3 {
+.service-meta h3 {
   font-family: var(--font-display);
   font-size: clamp(18px, 2vw, 24px);
   text-transform: uppercase;
   letter-spacing: 0.01em;
 }
 
-.release-meta p {
+.service-meta p {
   margin-top: 4px;
   font-size: 12px;
   color: var(--grey);
@@ -595,23 +594,17 @@ textarea {
   letter-spacing: 0.06em;
 }
 
-@media (max-width: 900px) {
-  .releases-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 560px) {
-  .releases-grid {
+@media (max-width: 720px) {
+  .services-grid {
     grid-template-columns: 1fr;
   }
-  .release-card {
+  .service-card {
     aspect-ratio: 4 / 3;
   }
 }
 
-/* ============ ROSTER (horizontal scrollytelling) ============ */
-#roster {
+/* ============ PROYECTOS (horizontal scrollytelling) ============ */
+#proyectos {
   height: 100vh;
   min-height: 620px;
   background: var(--black);
@@ -621,24 +614,24 @@ textarea {
   overflow: hidden;
 }
 
-.roster-head {
+.work-head {
   padding: 0 clamp(20px, 6vw, 48px);
   margin-bottom: 40px;
 }
 
-.roster-viewport {
+.work-viewport {
   overflow: hidden;
   width: 100%;
 }
 
-.roster-track {
+.work-track {
   display: flex;
   gap: 24px;
   padding: 0 clamp(20px, 6vw, 48px);
   width: max-content;
 }
 
-.roster-card {
+.work-card {
   width: min(340px, 74vw);
   aspect-ratio: 3 / 4;
   border: 1px solid var(--line);
@@ -652,24 +645,24 @@ textarea {
   transition: border-color 0.4s ease, transform 0.4s ease;
 }
 
-.roster-card:hover {
+.work-card:hover {
   border-color: var(--red);
   transform: translateY(-6px);
 }
 
-.roster-num {
+.work-num {
   font-family: var(--font-display);
   font-size: 56px;
   color: var(--red-dim);
 }
 
-.roster-card h3 {
+.work-card h3 {
   font-family: var(--font-display);
   font-size: clamp(22px, 2.4vw, 30px);
   text-transform: uppercase;
 }
 
-.roster-card p {
+.work-card p {
   color: var(--grey);
   font-size: 13px;
   text-transform: uppercase;
@@ -732,8 +725,8 @@ textarea {
   }
 }
 
-/* ============ EVENTS ============ */
-#events {
+/* ============ ESTRENOS ============ */
+#estrenos {
   background: var(--black);
   padding-bottom: 100px;
 }

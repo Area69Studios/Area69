@@ -79,8 +79,8 @@ function manifestoScrollytelling() {
   });
 }
 
-function releasesReveal() {
-  gsap.utils.toArray('.release-card').forEach((card, i) => {
+function servicesReveal() {
+  gsap.utils.toArray('.service-card').forEach((card, i) => {
     gsap.fromTo(
       card,
       { opacity: 0, y: 60 },
@@ -99,13 +99,13 @@ function releasesReveal() {
   });
 }
 
-function rosterHorizontalScroll() {
-  const section = document.getElementById('roster');
-  const track = document.querySelector('.roster-track');
+function workHorizontalScroll() {
+  const section = document.getElementById('proyectos');
+  const track = document.querySelector('.work-track');
   if (!section || !track) return;
 
   gsap.fromTo(
-    section.querySelectorAll('.roster-head > *'),
+    section.querySelectorAll('.work-head > *'),
     { opacity: 0, y: 30 },
     {
       opacity: 1,
@@ -169,8 +169,8 @@ async function boot() {
   initNav();
   heroIntro();
   manifestoScrollytelling();
-  releasesReveal();
-  rosterHorizontalScroll();
+  servicesReveal();
+  workHorizontalScroll();
   initCounters();
   eventsReveal();
   initContactForm();

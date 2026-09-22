@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>AREA69 — Estudio de Contenido &amp; Entretenimiento</title>
-  <meta name="description" content="AREA69 es un estudio de producción de música, video y eventos en vivo. Interceptamos señales antes de que se conviertan en tendencia." />
+  <title>AREA69 — Productora Audiovisual Independiente</title>
+  <meta name="description" content="AREA69 es una productora audiovisual independiente de tres personas. Hacemos vídeos, documentales y cortometrajes." />
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="icon" type="image/png" href="/favicon.png" />
 </head>
@@ -24,9 +24,9 @@
     </a>
     <nav class="nav-links">
       <a href="#manifesto"><span>01</span>Estudio</a>
-      <a href="#releases"><span>02</span>Transmisiones</a>
-      <a href="#roster"><span>03</span>Roster</a>
-      <a href="#events"><span>04</span>En vivo</a>
+      <a href="#proyectos"><span>02</span>Proyectos</a>
+      <a href="#servicios"><span>03</span>Servicios</a>
+      <a href="#estrenos"><span>04</span>Estrenos</a>
       <a href="#contact"><span>05</span>Contacto</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
@@ -36,9 +36,9 @@
 
   <div class="mobile-menu" id="mobileMenu">
     <a href="#manifesto">Estudio</a>
-    <a href="#releases">Transmisiones</a>
-    <a href="#roster">Roster</a>
-    <a href="#events">En vivo</a>
+    <a href="#proyectos">Proyectos</a>
+    <a href="#servicios">Servicios</a>
+    <a href="#estrenos">Estrenos</a>
     <a href="#contact">Contacto</a>
   </div>
 
@@ -49,14 +49,14 @@
       <canvas id="webgl-hero"></canvas>
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="hero-content">
-        <p class="eyebrow reveal-up">Estudio de producción · Fundado en España</p>
+        <p class="eyebrow reveal-up">Productora audiovisual independiente · España</p>
         <h1 class="wordmark">
           <span class="wm-line reveal-word">ÁREA<b>69</b></span>
         </h1>
         <p class="tagline reveal-up">Contenido que no es de este mundo.</p>
         <div class="hero-cta reveal-up">
           <a href="#manifesto" class="btn">Explorar la señal</a>
-          <a href="#releases" class="btn btn-ghost">Ver transmisiones</a>
+          <a href="#proyectos" class="btn btn-ghost">Ver proyectos</a>
         </div>
       </div>
       <div class="scroll-cue" aria-hidden="true">
@@ -76,99 +76,83 @@
         <div class="manifesto-lines">
           <p class="line">En 1955 alguien trazó una línea en el desierto de Nevada y la llamó <em>Área 51</em>.</p>
           <p class="line">En 2024 nosotros trazamos la nuestra.</p>
-          <p class="line">Teníamos más ideas de vídeo de las que podíamos contener, así que decidimos sacarles partido.</p>
-          <p class="line">Así nació AREA69: un estudio de contenido para artistas, marcas y audiencias que buscan algo distinto.</p>
+          <p class="line">Somos tres personas con más ideas de vídeo de las que podíamos contener, así que decidimos sacarles partido.</p>
+          <p class="line">Así nació AREA69: una productora independiente de vídeo, documental y cortometraje.</p>
           <p class="line line-accent">No seguimos tendencias. Las interceptamos antes de que existan.</p>
         </div>
       </div>
     </section>
 
-    <!-- RELEASES -->
-    <section id="releases" class="section">
-      <div class="section-head">
-        <h2 class="section-title"><span class="outline">Últimas</span> Transmisiones</h2>
-        <p class="section-desc">Música, video y sesiones producidas dentro del estudio. Actualizado en tiempo real.</p>
+    <!-- PROYECTOS — horizontal scrollytelling -->
+    <section id="proyectos" class="section pin-section">
+      <div class="work-head">
+        <h2 class="section-title"><span class="outline">Nuestro</span> Trabajo</h2>
+        <p class="section-desc">Vídeos, documentales y cortometrajes producidos por el estudio.</p>
       </div>
-      <div class="releases-grid">
-        <article class="release-card" style="--rc: 226 38 28;">
-          <div class="release-visual"><span class="release-index">01</span></div>
-          <div class="release-meta">
+      <div class="work-viewport">
+        <div class="work-track">
+          <article class="work-card">
+            <span class="work-num">01</span>
             <h3>FRECUENCIA 69</h3>
-            <p>Videoclip · 2026</p>
-          </div>
-        </article>
-        <article class="release-card" style="--rc: 255 255 255;">
-          <div class="release-visual"><span class="release-index">02</span></div>
-          <div class="release-meta">
+            <p>Cortometraje · 2026</p>
+          </article>
+          <article class="work-card">
+            <span class="work-num">02</span>
             <h3>NOCTURNO</h3>
-            <p>EP · 2025</p>
-          </div>
-        </article>
-        <article class="release-card" style="--rc: 226 38 28;">
-          <div class="release-visual"><span class="release-index">03</span></div>
-          <div class="release-meta">
+            <p>Documental · 2025</p>
+          </article>
+          <article class="work-card">
+            <span class="work-num">03</span>
             <h3>SEÑALES</h3>
             <p>Documental · 2025</p>
-          </div>
-        </article>
-        <article class="release-card" style="--rc: 255 255 255;">
-          <div class="release-visual"><span class="release-index">04</span></div>
-          <div class="release-meta">
+          </article>
+          <article class="work-card">
+            <span class="work-num">04</span>
             <h3>RUIDO BLANCO</h3>
-            <p>Sesión en vivo · 2025</p>
-          </div>
-        </article>
-        <article class="release-card" style="--rc: 226 38 28;">
-          <div class="release-visual"><span class="release-index">05</span></div>
-          <div class="release-meta">
+            <p>Vídeo de marca · 2025</p>
+          </article>
+          <article class="work-card">
+            <span class="work-num">05</span>
             <h3>OVNI</h3>
-            <p>Single · 2024</p>
-          </div>
-        </article>
-        <article class="release-card" style="--rc: 255 255 255;">
-          <div class="release-visual"><span class="release-index">06</span></div>
-          <div class="release-meta">
+            <p>Cortometraje · 2024</p>
+          </article>
+          <article class="work-card">
+            <span class="work-num">06</span>
             <h3>ABDUCCIÓN</h3>
-            <p>Remix · 2024</p>
-          </div>
-        </article>
+            <p>Vídeo de marca · 2024</p>
+          </article>
+        </div>
       </div>
     </section>
 
-    <!-- ROSTER — horizontal scrollytelling -->
-    <section id="roster" class="section pin-section">
-      <div class="roster-head">
-        <h2 class="section-title"><span class="outline">El</span> Roster</h2>
-        <p class="section-desc">Artistas y creadores que transmiten desde AREA69.</p>
+    <!-- SERVICIOS -->
+    <section id="servicios" class="section">
+      <div class="section-head">
+        <h2 class="section-title"><span class="outline">Qué</span> Hacemos</h2>
+        <p class="section-desc">Tres formatos, el mismo cuidado por la historia.</p>
       </div>
-      <div class="roster-viewport">
-        <div class="roster-track">
-          <article class="roster-card">
-            <span class="roster-num">A</span>
-            <h3>NOVA REYES</h3>
-            <p>Cantante · Productora</p>
-          </article>
-          <article class="roster-card">
-            <span class="roster-num">B</span>
-            <h3>KAI VOLT</h3>
-            <p>DJ · Productor</p>
-          </article>
-          <article class="roster-card">
-            <span class="roster-num">C</span>
-            <h3>LUNA STATIC</h3>
-            <p>Artista visual</p>
-          </article>
-          <article class="roster-card">
-            <span class="roster-num">D</span>
-            <h3>DOBLE CERO</h3>
-            <p>Colectivo audiovisual</p>
-          </article>
-          <article class="roster-card">
-            <span class="roster-num">E</span>
-            <h3>MARA ECLIPSE</h3>
-            <p>Cantautora</p>
-          </article>
-        </div>
+      <div class="services-grid">
+        <article class="service-card" style="--rc: 226 38 28;">
+          <div class="service-visual"><span class="service-index">01</span></div>
+          <div class="service-meta">
+            <h3>VÍDEO</h3>
+            <p>Contenido de marca y campañas</p>
+          </div>
+        </article>
+        <article class="service-card" style="--rc: 255 255 255;">
+          <div class="service-visual"><span class="service-index">02</span></div>
+          <div class="service-meta">
+            <h3>DOCUMENTAL</h3>
+            <p>Historias reales, contadas con tiempo</p>
+          </div>
+        </article>
+        <article class="service-card" style="--rc: 226 38 28;">
+          <div class="service-visual"><span class="service-index">03</span></div>
+          <div class="service-meta">
+            <h3>CORTOMETRAJE</h3>
+            <p>Ficción para festivales y plataformas</p>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -177,56 +161,56 @@
       <div class="stats-grid">
         <div class="stat">
           <div class="stat-value">
-            <span class="stat-number" data-target="4200000">0</span>
+            <span class="stat-number" data-target="3">0</span>
+          </div>
+          <p class="stat-label">Personas en el equipo</p>
+        </div>
+        <div class="stat">
+          <div class="stat-value">
+            <span class="stat-number" data-target="12">0</span>
             <span class="stat-suffix">+</span>
           </div>
-          <p class="stat-label">Reproducciones mensuales</p>
+          <p class="stat-label">Proyectos producidos</p>
         </div>
         <div class="stat">
           <div class="stat-value">
-            <span class="stat-number" data-target="38">0</span>
+            <span class="stat-number" data-target="2024">0</span>
           </div>
-          <p class="stat-label">Artistas representados</p>
+          <p class="stat-label">Año de fundación</p>
         </div>
         <div class="stat">
           <div class="stat-value">
-            <span class="stat-number" data-target="120">0</span>
-            <span class="stat-suffix">+</span>
+            <span class="stat-number" data-target="100">0</span>
+            <span class="stat-suffix">%</span>
           </div>
-          <p class="stat-label">Producciones audiovisuales</p>
-        </div>
-        <div class="stat">
-          <div class="stat-value">
-            <span class="stat-number" data-target="15">0</span>
-          </div>
-          <p class="stat-label">Países alcanzados</p>
+          <p class="stat-label">Independiente</p>
         </div>
       </div>
     </section>
 
-    <!-- EVENTS -->
-    <section id="events" class="section">
+    <!-- ESTRENOS -->
+    <section id="estrenos" class="section">
       <div class="section-head">
-        <h2 class="section-title"><span class="outline">En</span> Vivo</h2>
-        <p class="section-desc">Próximas transmisiones, lanzamientos y showcases.</p>
+        <h2 class="section-title"><span class="outline">Próximos</span> Estrenos</h2>
+        <p class="section-desc">Vídeos, documentales y cortometrajes en camino.</p>
       </div>
       <ul class="events-list">
         <li class="event-row reveal-up">
           <span class="event-date">03 OCT</span>
-          <span class="event-name">Lanzamiento "Frecuencia 69"</span>
-          <span class="event-place">Madrid</span>
+          <span class="event-name">Estreno de "Frecuencia 69"</span>
+          <span class="event-place">Online</span>
           <a href="#contact" class="event-link">Detalles →</a>
         </li>
         <li class="event-row reveal-up">
           <span class="event-date">18 OCT</span>
-          <span class="event-name">AREA69 Sessions — Stream en vivo</span>
-          <span class="event-place">Twitch / YouTube</span>
+          <span class="event-name">Preestreno de "Nocturno"</span>
+          <span class="event-place">Madrid</span>
           <a href="#contact" class="event-link">Detalles →</a>
         </li>
         <li class="event-row reveal-up">
           <span class="event-date">07 NOV</span>
-          <span class="event-name">Showcase anual AREA69</span>
-          <span class="event-place">Barcelona</span>
+          <span class="event-name">"Señales" — selección oficial</span>
+          <span class="event-place">Festival de Barcelona</span>
           <a href="#contact" class="event-link">Detalles →</a>
         </li>
       </ul>
@@ -235,7 +219,7 @@
     <!-- CONTACT -->
     <section id="contact" class="section">
       <div class="contact-inner">
-        <p class="section-desc reveal-up">¿Tienes una señal que transmitir?</p>
+        <p class="section-desc reveal-up">¿Tienes una historia que contar?</p>
         <h2 class="giant-outline reveal-up">HABLEMOS</h2>
         <form class="contact-form reveal-up" id="contactForm">
           <div class="field">
