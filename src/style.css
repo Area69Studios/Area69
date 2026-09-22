@@ -1125,12 +1125,60 @@ textarea {
 
 /* ============ CONTACT ============ */
 #contact {
+  position: relative;
+  overflow: hidden;
   background: var(--black-2);
   padding: 120px clamp(20px, 6vw, 48px);
   border-top: 1px solid var(--line);
 }
 
+/* Same duotone as the covers and the manifesto. Lower again than the
+   manifesto: this sits behind form labels and placeholders, which are
+   small and already dim, not behind display type. */
+.contact-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  pointer-events: none;
+  opacity: 0.18;
+}
+
+.contact-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: grayscale(1) contrast(1.3) brightness(0.34);
+}
+
+.contact-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--red);
+  mix-blend-mode: color;
+  opacity: 0.72;
+}
+
+/* The form's placeholders sit at 2.2:1 on the plain background already;
+   the picture behind them pushed that to 1.9:1. This pulls the middle back
+   to roughly where it was while leaving the image readable at the edges.
+   ::after paints above the section's children, so it lands over the media
+   and under .contact-inner. */
+#contact::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(58% 52% at 50% 58%, rgb(17 17 19 / 0.88), transparent 78%);
+}
+
 .contact-inner {
+  position: relative;
+  z-index: 1;
   max-width: 900px;
   margin: 0 auto;
   text-align: center;
