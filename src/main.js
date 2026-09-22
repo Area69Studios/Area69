@@ -173,14 +173,24 @@ function eventsReveal() {
 /* The row's "Detalles" opens in place. GSAP measures the height rather than
    a CSS max-height guess, so the copy can change length without the
    animation clipping it or leaving a gap. */
-/* YouTube only generates maxresdefault for videos uploaded in HD, so the
-   ones that lack it 404. Swap to hqdefault, which always exists. */
+/* YouTube thumbnails fail in two different ways and only one of them is an
+   error. maxresdefault 404s when the video was not uploaded in HD, which
+   fires 'error'; but some sizes answer 200 with a 120x90 grey placeholder,
+   which loads "successfully" and shows nothing. So this walks the sizes on
+   either signal: a failed load, or one that arrives too small to be real. */
+const YT_SIZES = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'];
+
 function initThumbFallbacks() {
-  document.querySelectorAll('img[data-fallback]').forEach((img) => {
-    img.addEventListener('error', () => {
-      if (img.dataset.fallbackUsed) return;
-      img.dataset.fallbackUsed = '1';
-      img.src = img.dataset.fallback;
+  document.querySelectorAll('img[data-yt]').forEach((img) => {
+    const next = () => {
+      const step = Number(img.dataset.ytStep || 0) + 1;
+      if (step >= YT_SIZES.length) return; // nothing left to try
+      img.dataset.ytStep = String(step);
+      img.src = `https://i.ytimg.com/vi/${img.dataset.yt}/${YT_SIZES[step]}.jpg`;
+    };
+    img.addEventListener('error', next);
+    img.addEventListener('load', () => {
+      if (img.naturalWidth > 0 && img.naturalWidth <= 120) next();
     });
   });
 }
