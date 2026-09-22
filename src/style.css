@@ -126,7 +126,6 @@ textarea {
 .pre-m {
   display: block;
   overflow: hidden;
-  padding-bottom: 0.05em;
 }
 
 .pre-c {
@@ -137,6 +136,11 @@ textarea {
   line-height: 0.86;
   letter-spacing: 0.02em;
   color: var(--white);
+  /* 0.86 line-height cuts the box shorter than the glyph: the 6 and the 9
+     carry ink ~1.6% below the baseline and the mask was clipping it. This
+     has to sit on the character, not the mask -- em here resolves against
+     the display size, on the mask it resolved against the inherited 16px. */
+  padding-block: 0.025em 0.05em;
   transform: translate3d(0, 115%, 0);
 }
 
@@ -146,7 +150,7 @@ textarea {
 
 .pre-rule {
   height: 1px;
-  margin-top: 26px;
+  margin-top: 12px;
   background: rgb(255 255 255 / 0.1);
   overflow: hidden;
 }
