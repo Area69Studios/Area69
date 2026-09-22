@@ -173,6 +173,18 @@ function eventsReveal() {
 /* The row's "Detalles" opens in place. GSAP measures the height rather than
    a CSS max-height guess, so the copy can change length without the
    animation clipping it or leaving a gap. */
+/* YouTube only generates maxresdefault for videos uploaded in HD, so the
+   ones that lack it 404. Swap to hqdefault, which always exists. */
+function initThumbFallbacks() {
+  document.querySelectorAll('img[data-fallback]').forEach((img) => {
+    img.addEventListener('error', () => {
+      if (img.dataset.fallbackUsed) return;
+      img.dataset.fallbackUsed = '1';
+      img.src = img.dataset.fallback;
+    });
+  });
+}
+
 function initEventDetails() {
   document.querySelectorAll('.event-link[aria-controls]').forEach((btn) => {
     const note = document.getElementById(btn.getAttribute('aria-controls'));
@@ -216,6 +228,7 @@ async function boot() {
   workHorizontalScroll();
   initCounters();
   eventsReveal();
+  initThumbFallbacks();
   initEventDetails();
   initContactForm();
   initScrollProgress();

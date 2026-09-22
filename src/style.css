@@ -943,9 +943,40 @@ textarea {
 
 .work-track {
   display: flex;
-  gap: 24px;
+  align-items: flex-start;
+  gap: clamp(36px, 5vw, 72px);
   padding: 0 clamp(20px, 6vw, 48px);
   width: max-content;
+}
+
+.work-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.work-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--white);
+  white-space: nowrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.work-group-title span {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--red);
+}
+
+.work-group-cards {
+  display: flex;
+  gap: 24px;
 }
 
 .work-card {
