@@ -106,33 +106,40 @@ textarea {
   background: var(--black);
   display: grid;
   place-items: center;
-  will-change: transform;
 }
 
 .pre-stage {
-  padding: 0 clamp(20px, 6vw, 48px);
-}
-
-/* the mark rises out of a mask rather than fading in — the edge doing the
-   revealing is what makes it read as one continuous move */
-.pre-mask {
-  display: block;
-  overflow: hidden;
-  padding-bottom: 0.06em;
+  position: relative;
+  will-change: transform;
 }
 
 .pre-word {
   display: block;
   font-family: var(--font-logo);
   font-style: normal;
-  font-size: clamp(120px, 26vw, 300px);
+  font-size: clamp(170px, 46vw, 620px);
   line-height: 0.86;
-  letter-spacing: 0.06em;
-  color: var(--white);
-  transform: translate3d(0, 110%, 0);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.pre-word b {
+/* the empty vessel */
+.pre-ghost,
+.pre-ghost b {
+  color: rgb(255 255 255 / 0.14);
+  font-weight: inherit;
+}
+
+/* the same mark in its real colours, revealed only up to the ink line */
+.pre-fill {
+  position: absolute;
+  inset: 0;
+  color: var(--white);
+  /* JS drives this; the flat start keeps the first frame from flashing */
+  clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+}
+
+.pre-fill b {
   font-weight: inherit;
   color: var(--red);
 }
@@ -153,27 +160,16 @@ textarea {
 }
 
 .pre-count {
-  color: var(--grey);
+  color: var(--red);
   font-variant-numeric: tabular-nums;
 }
 
-/* hairline at the very bottom edge, filling left to right */
-.pre-rule {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: rgb(255 255 255 / 0.07);
-  overflow: hidden;
-}
-
-.pre-rule i {
-  display: block;
-  height: 100%;
-  background: var(--white);
-  transform: scaleX(0);
-  transform-origin: left;
+/* 46vw leaves the mark floating on a tall phone screen; here it should fill
+   the width the way it fills the frame on a desktop */
+@media (max-width: 640px) {
+  .pre-word {
+    font-size: 108vw;
+  }
 }
 
 /* ============ NAV ============ */
