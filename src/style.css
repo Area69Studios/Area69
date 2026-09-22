@@ -83,6 +83,20 @@ textarea {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
+/* ============ SCROLL PROGRESS ============ */
+#scrollProgress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  z-index: 9997;
+  pointer-events: none;
+}
+
 /* ============ PRELOADER ============ */
 #preloader {
   position: fixed;
@@ -152,9 +166,27 @@ textarea {
   transform: translateY(-110%);
 }
 
-.nav-logo img {
-  height: 34px;
-  width: auto;
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--white);
+  text-transform: uppercase;
+  display: inline-flex;
+}
+
+.brand-mark b {
+  font-weight: inherit;
+  color: var(--red);
+}
+
+.nav-logo {
+  transition: opacity 0.3s ease;
+}
+
+.nav-logo:hover {
+  opacity: 0.8;
 }
 
 .nav-links {
@@ -517,6 +549,11 @@ textarea {
 .section-title .outline {
   color: transparent;
   -webkit-text-stroke: 1px var(--white);
+  transition: color 0.9s var(--ease);
+}
+
+.section-title .outline.filled {
+  color: var(--white);
 }
 
 .section-desc {
@@ -550,6 +587,20 @@ textarea {
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+}
+
+.service-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--rc), 0.14), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.service-card:hover::before {
+  opacity: 1;
 }
 
 .service-visual {
@@ -632,6 +683,8 @@ textarea {
 }
 
 .work-card {
+  position: relative;
+  overflow: hidden;
   width: min(340px, 74vw);
   aspect-ratio: 3 / 4;
   border: 1px solid var(--line);
@@ -645,9 +698,23 @@ textarea {
   transition: border-color 0.4s ease, transform 0.4s ease;
 }
 
+.work-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(226, 38, 28, 0.16), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
 .work-card:hover {
   border-color: var(--red);
   transform: translateY(-6px);
+}
+
+.work-card:hover::before {
+  opacity: 1;
 }
 
 .work-num {
@@ -701,6 +768,7 @@ textarea {
   font-family: var(--font-display);
   font-size: clamp(36px, 5vw, 64px);
   color: var(--white);
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-suffix {
@@ -894,7 +962,7 @@ textarea {
 }
 
 .footer-logo {
-  height: 30px;
+  font-size: 30px;
 }
 
 .socials {

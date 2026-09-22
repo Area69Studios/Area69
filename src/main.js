@@ -11,6 +11,7 @@ import { runPreloader } from './lib/loader.js';
 import { initSmoothScroll } from './lib/lenis-scroll.js';
 import { initHeroScene } from './lib/three-hero.js';
 import { initCounters } from './lib/counters.js';
+import { initScrollProgress, initMagneticButtons, initCardGlow, initOutlineFill } from './lib/modern.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -45,10 +46,26 @@ function initNav() {
     },
   });
 
+  const menuLinks = menu.querySelectorAll('a');
+  gsap.set(menuLinks, { opacity: 0, y: 24 });
+
   toggle.addEventListener('click', () => {
     const isOpen = menu.classList.toggle('open');
     toggle.classList.toggle('active', isOpen);
     toggle.setAttribute('aria-expanded', String(isOpen));
+
+    if (isOpen) {
+      gsap.to(menuLinks, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+        stagger: 0.06,
+        delay: 0.15,
+      });
+    } else {
+      gsap.set(menuLinks, { opacity: 0, y: 24 });
+    }
   });
 
   menu.querySelectorAll('a').forEach((a) =>
@@ -174,6 +191,10 @@ async function boot() {
   initCounters();
   eventsReveal();
   initContactForm();
+  initScrollProgress();
+  initMagneticButtons();
+  initCardGlow();
+  initOutlineFill();
 
   ScrollTrigger.refresh();
 }
