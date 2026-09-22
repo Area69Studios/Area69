@@ -13,6 +13,7 @@ import { initSmoothScroll } from './lib/lenis-scroll.js';
 import { initHeroFluid } from './lib/hero-fluid.js';
 import { initCounters } from './lib/counters.js';
 import { initScrollProgress, initMagneticButtons, initCardGlow, initOutlineFill } from './lib/modern.js';
+import { initSound, play } from './lib/sound.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -189,6 +190,7 @@ async function boot() {
   // is already alive by the time it is uncovered.
   const loading = runPreloader();
 
+  initSound();
   initSmoothScroll();
   initHeroFluid();
   initNav();
@@ -205,6 +207,7 @@ async function boot() {
   ScrollTrigger.refresh();
 
   await loading;
+  play('reveal');
   heroIntro();
 }
 
