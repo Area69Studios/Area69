@@ -180,23 +180,58 @@ function eventsReveal() {
    either signal: a failed load, or one that arrives too small to be real. */
 const YT_SIZES = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'];
 
-/* Some thumbnails carry black bars inside the picture itself — the file is
-   16:9 but the frame sits letterboxed within it, so no amount of object-fit
-   reaches the edges. The bars can only be found by looking at the pixels.
-   Measured on a throwaway CORS copy: if the host refuses the read, the
-   visible image is untouched rather than broken. */
-function cropBars(img) {
+/* Two different letterboxes end up on these cards, and they need different
+   answers.
+
+   The first is in the file's shape: YouTube's sddefault and hqdefault are
+   4:3 files with the 16:9 frame sitting inside black bars. That one is pure
+   arithmetic — the frame is centred, so how much to scale follows from the
+   ratio alone, with nothing to read and nothing to fail.
+
+   The second is inside the picture: a 16:9 file whose frame was itself shot
+   wider. Only the pixels show that, and reading them needs the host's
+   permission. Measured on the user's own screenshot the bar came to 11.9% of
+   the card — which both cases produce, so the site does both: the arithmetic
+   always, the pixels on top when they are readable. */
+
+const FRAME = 16 / 9;
+
+function applyCrop(img, scale, centre) {
+  if (!(scale > 1.002)) { img.style.transform = ''; return; }
+  /* Right to left: the shift happens in the image's own coordinates and is
+     then scaled with it, which lands the kept band exactly on the card. */
+  img.style.transform =
+    `scale(${scale.toFixed(4)}) translateY(${(-(centre - 0.5) * 100).toFixed(2)}%)`;
+}
+
+// a file narrower than 16:9 is holding a 16:9 frame between centred bars
+function cropByRatio(img) {
+  const ratio = img.naturalWidth / img.naturalHeight;
+  if (!ratio || ratio > FRAME - 0.02) return 1;
+  const scale = FRAME / ratio;
+  return scale > 3 ? 1 : scale;
+}
+
+/* A separate copy asked for with CORS, so reading it cannot taint the canvas
+   the visible image is drawn on. The query string matters: without it the
+   browser may hand back the copy it already cached for the plain request,
+   which carries no CORS headers and fails the load. If the host refuses,
+   onload never fires and the arithmetic crop is what stands. */
+function cropByPixels(img, floor) {
   const probe = new Image();
   probe.crossOrigin = 'anonymous';
   probe.onload = () => {
     try {
-      const w = 96;
+      /* 320 wide, not 96: at 96 a 1280x720 frame resamples to 54 rows, so a
+         bar 6.6 rows deep reads as 6 and a sliver of it survives the crop.
+         At this size the same bar lands on a whole number of rows. */
+      const w = 320;
       const h = Math.max(1, Math.round((probe.naturalHeight / probe.naturalWidth) * w));
       const cv = document.createElement('canvas');
       cv.width = w; cv.height = h;
       const cx = cv.getContext('2d', { willReadFrequently: true });
       cx.drawImage(probe, 0, 0, w, h);
-      const { data } = cx.getImageData(0, 0, w, h); // throws if tainted
+      const { data } = cx.getImageData(0, 0, w, h); // throws on a tainted canvas
 
       const rowIsBar = (y) => {
         let sum = 0;
@@ -204,27 +239,28 @@ function cropBars(img) {
           const i = (y * w + x) * 4;
           sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
         }
-        return sum / w < 14; // near black across the whole row
+        return sum / w < 14; // near black the whole way across
       };
 
       let top = 0;
       while (top < h && rowIsBar(top)) top++;
       let bottom = h - 1;
       while (bottom > top && rowIsBar(bottom)) bottom--;
-      if (top === 0 && bottom === h - 1) return;      // no bars
-      if (bottom - top < h * 0.3) return;             // too little left to trust
+      if (top === 0 && bottom === h - 1) return;  // no bars
+      if (bottom - top < h * 0.3) return;         // too little left to trust
 
       const t = top / h;
       const b = (bottom + 1) / h;
       const scale = 1 / (b - t);
-      if (scale > 3) return;                          // implausible, leave it
-      const centre = (t + b) / 2;
-      img.style.transform = `scale(${scale.toFixed(4)}) translateY(${(-(centre - 0.5) * 100).toFixed(2)}%)`;
+      if (scale > 3) return;                      // implausible, leave it
+      // never undo the crop the ratio already earned
+      if (scale <= floor + 0.01) return;
+      applyCrop(img, scale, (t + b) / 2);
     } catch {
-      /* tainted canvas: nothing to do, and nothing broken */
+      /* the host sent no CORS headers: nothing to do, and nothing broken */
     }
   };
-  probe.src = img.src;
+  probe.src = `${img.src}${img.src.includes('?') ? '&' : '?'}x=cors`;
 }
 
 function initThumbFallbacks() {
@@ -239,8 +275,9 @@ function initThumbFallbacks() {
     img.addEventListener('load', () => {
       if (img.naturalWidth <= 0) return;
       if (img.naturalWidth <= 120) { next(); return; }
-      img.style.transform = '';
-      cropBars(img);
+      const byRatio = cropByRatio(img);
+      applyCrop(img, byRatio, 0.5);
+      cropByPixels(img, byRatio);
     });
   });
 }
