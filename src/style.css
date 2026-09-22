@@ -1227,11 +1227,50 @@ textarea {
   text-transform: uppercase;
   color: var(--grey);
   text-align: right;
+  cursor: pointer;
   transition: color 0.3s ease;
 }
 
-.event-row:hover .event-link {
+.event-row:hover .event-link,
+.event-link:hover {
   color: var(--white);
+}
+
+.event-link:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 4px;
+}
+
+.event-caret {
+  display: inline-block;
+  transition: transform 0.35s var(--ease);
+}
+
+.event-link[aria-expanded="true"] {
+  color: var(--red);
+}
+
+.event-link[aria-expanded="true"] .event-caret {
+  transform: rotate(90deg);
+}
+
+/* spans the row's columns so the copy runs full width under it */
+.event-note {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--grey);
+  max-width: 60ch;
+}
+
+.event-note-tag {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--red);
 }
 
 @media (max-width: 760px) {

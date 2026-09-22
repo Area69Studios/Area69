@@ -170,6 +170,34 @@ function eventsReveal() {
   });
 }
 
+/* The row's "Detalles" opens in place. GSAP measures the height rather than
+   a CSS max-height guess, so the copy can change length without the
+   animation clipping it or leaving a gap. */
+function initEventDetails() {
+  document.querySelectorAll('.event-link[aria-controls]').forEach((btn) => {
+    const note = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!note) return;
+
+    btn.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+
+      if (open) {
+        gsap.to(note, {
+          height: 0, opacity: 0, duration: 0.32, ease: 'power2.in',
+          onComplete: () => { note.hidden = true; gsap.set(note, { clearProps: 'height,opacity' }); },
+        });
+      } else {
+        note.hidden = false;
+        gsap.fromTo(note,
+          { height: 0, opacity: 0 },
+          { height: 'auto', opacity: 1, duration: 0.42, ease: 'power3.out',
+            onComplete: () => gsap.set(note, { clearProps: 'height' }) });
+      }
+    });
+  });
+}
+
 async function boot() {
   // Start the loading screen but do not wait on it: everything below is
   // setup work the loading screen exists to cover. Booting the fluid used
@@ -188,6 +216,7 @@ async function boot() {
   workHorizontalScroll();
   initCounters();
   eventsReveal();
+  initEventDetails();
   initContactForm();
   initScrollProgress();
   initMagneticButtons();

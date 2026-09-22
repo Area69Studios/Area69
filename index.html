@@ -280,7 +280,15 @@
           <span class="event-date">—</span>
           <span class="event-name">JOHN JOHNSON 5</span>
           <span class="event-place">Por confirmar</span>
-          <a href="#contact" class="event-link">Detalles →</a>
+          <!-- a button, not a link: it reveals content in place rather than
+               taking you anywhere -->
+          <button type="button" class="event-link" aria-expanded="false" aria-controls="jj5-nota">
+            Detalles <span class="event-caret" aria-hidden="true">→</span>
+          </button>
+          <p class="event-note" id="jj5-nota" hidden>
+            <span class="event-note-tag">// SIN DATOS</span>
+            Aún no tenemos detalles acerca de este proyecto. Vuelve más tarde.
+          </p>
         </li>
       </ul>
     </section>
