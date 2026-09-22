@@ -605,7 +605,7 @@ textarea {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--rc), 0.14), transparent 70%);
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgb(var(--rc) / 0.14), transparent 70%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -616,26 +616,71 @@ textarea {
 }
 
 .service-visual {
+  position: relative;
   flex: 1;
   border-radius: 4px;
-  background: radial-gradient(circle at 30% 20%, rgba(var(--rc), 0.35), transparent 60%),
-    linear-gradient(160deg, rgba(var(--rc), 0.12), transparent 70%);
+  background: radial-gradient(circle at 30% 20%, rgb(var(--rc) / 0.35), transparent 60%),
+    linear-gradient(160deg, rgb(var(--rc) / 0.12), transparent 70%);
   border: 1px solid var(--line);
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  place-items: center;
   padding: 14px;
   transition: transform 0.6s var(--ease), border-color 0.4s ease;
 }
 
+/* viewfinder brackets — four corners drawn as eight thin gradient strips */
+.service-visual::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  opacity: 0.45;
+  transition: opacity 0.4s ease;
+  --c: rgb(var(--rc) / 0.85);
+  --l: 14px;
+  background:
+    linear-gradient(var(--c), var(--c)) 0 0 / var(--l) 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 0 / 1px var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 0 / var(--l) 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 0 / 1px var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 100% / var(--l) 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 100% / 1px var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 100% / var(--l) 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 100% / 1px var(--l) no-repeat;
+}
+
+.service-card:hover .service-visual::after {
+  opacity: 1;
+}
+
+.service-icon {
+  width: clamp(40px, 26%, 68px);
+  height: auto;
+  fill: none;
+  stroke: rgb(var(--rc) / 0.75);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.4s ease, transform 0.6s var(--ease);
+}
+
+.service-card:hover .service-icon {
+  stroke: rgb(var(--rc));
+  transform: scale(1.08);
+}
+
 .service-index {
+  position: absolute;
+  top: 12px;
+  left: 14px;
   font-family: var(--font-display);
   font-size: 13px;
-  color: rgba(var(--rc), 0.8);
+  color: rgb(var(--rc) / 0.8);
 }
 
 .service-card:hover .service-visual {
   transform: scale(1.04) rotate(-1deg);
-  border-color: rgba(var(--rc), 0.6);
+  border-color: rgb(var(--rc) / 0.6);
 }
 
 .service-meta {
