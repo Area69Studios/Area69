@@ -148,7 +148,9 @@ export function initHeroFluid() {
   const small = window.innerWidth < 800;
   const SIM_RES = small ? 96 : 128;
   const DYE_RES = small ? 256 : 512;
-  const PRESSURE_ITERATIONS = small ? 14 : 20;
+  // the pressure solve is most of the per-step cost; a gentle ambient
+  // flow does not need a tightly converged projection
+  const PRESSURE_ITERATIONS = small ? 8 : 12;
 
   const DENSITY_DISSIPATION = 0.993;
   const VELOCITY_DISSIPATION = 0.988;
@@ -156,7 +158,9 @@ export function initHeroFluid() {
   const CURL_STRENGTH = 32;
   const SPLAT_RADIUS = 0.0022;
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  // the dye buffer is only 512px, so drawing it at 1x costs far less on
+  // a high-DPI screen and looks identical once it is this soft
+  renderer.setPixelRatio(1);
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.autoClear = true;
 
@@ -281,22 +285,6 @@ export function initHeroFluid() {
     }
   }
 
-  // --- pointer ---
-  const pointer = { x: 0.5, y: 0.5, dx: 0, dy: 0, active: false, seeded: false };
-  window.addEventListener('pointermove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    if (e.clientY < rect.top || e.clientY > rect.bottom) { pointer.seeded = false; return; }
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = 1 - (e.clientY - rect.top) / rect.height;
-    if (pointer.seeded) {
-      pointer.dx = x - pointer.x;
-      pointer.dy = y - pointer.y;
-      pointer.active = true;
-    }
-    pointer.x = x;
-    pointer.y = y;
-    pointer.seeded = true;
-  }, { passive: true });
 
   // --- scroll fade, same transition out of the hero as before ---
   ScrollTrigger.create({
@@ -375,16 +363,21 @@ export function initHeroFluid() {
   const clock = new THREE.Clock();
   openingBurst();
 
+  /* Purely ambient, so the sim runs at 30Hz rather than every frame. Ink
+     laid down and decay are both scaled by dt, so the motion reads the same
+     as at 60Hz — it just costs half as much. */
+  const SIM_INTERVAL = 1 / 30;
+  let accumulator = 0;
+
   function frame() {
     requestAnimationFrame(frame);
-    const dt = Math.min(clock.getDelta(), 0.0166);
+    const elapsed = clock.getDelta();
     if (!visible || !inView) return;
 
-    if (pointer.active) {
-      const [r, g, b] = inkColor();
-      splat(pointer.x, pointer.y, pointer.dx * 6000, pointer.dy * 6000, r, g, b);
-      pointer.active = false;
-    }
+    accumulator += Math.min(elapsed, 0.1);
+    if (accumulator < SIM_INTERVAL) return;
+    const dt = Math.min(accumulator, 0.05);
+    accumulator = 0;
 
     autoFeed(dt);
     step(dt);
