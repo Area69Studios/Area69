@@ -163,12 +163,12 @@ textarea {
   display: inline-block;
   width: 0.32em;
   text-align: center;
-  color: var(--white);
+  color: var(--red);
   font-variant-numeric: tabular-nums;
 }
 
 .pre-ch.is-a {
-  color: var(--red);
+  color: var(--white);
 }
 
 /* a red line sweeping the mark, as if it were being read off */
@@ -266,15 +266,14 @@ textarea {
   font-size: 42px;
   line-height: 1;
   letter-spacing: 0.01em;
-  /* A in red, 69 in white -- inverted from logo.png, per the brand owner */
-  color: var(--red);
+  color: var(--white);
   text-transform: uppercase;
   display: inline-flex;
 }
 
 .brand-mark b {
   font-weight: inherit;
-  color: var(--white);
+  color: var(--red);
 }
 
 .nav-logo {
