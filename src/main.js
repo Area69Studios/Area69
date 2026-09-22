@@ -1,4 +1,5 @@
 import '@fontsource/anton/latin-400.css';
+import '@fontsource/six-caps/latin-400.css';
 import '@fontsource/space-grotesk/latin-400.css';
 import '@fontsource/space-grotesk/latin-500.css';
 import '@fontsource/space-grotesk/latin-600.css';
