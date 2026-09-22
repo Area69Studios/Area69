@@ -180,6 +180,53 @@ function eventsReveal() {
    either signal: a failed load, or one that arrives too small to be real. */
 const YT_SIZES = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'];
 
+/* Some thumbnails carry black bars inside the picture itself — the file is
+   16:9 but the frame sits letterboxed within it, so no amount of object-fit
+   reaches the edges. The bars can only be found by looking at the pixels.
+   Measured on a throwaway CORS copy: if the host refuses the read, the
+   visible image is untouched rather than broken. */
+function cropBars(img) {
+  const probe = new Image();
+  probe.crossOrigin = 'anonymous';
+  probe.onload = () => {
+    try {
+      const w = 96;
+      const h = Math.max(1, Math.round((probe.naturalHeight / probe.naturalWidth) * w));
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const cx = cv.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(probe, 0, 0, w, h);
+      const { data } = cx.getImageData(0, 0, w, h); // throws if tainted
+
+      const rowIsBar = (y) => {
+        let sum = 0;
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+        }
+        return sum / w < 14; // near black across the whole row
+      };
+
+      let top = 0;
+      while (top < h && rowIsBar(top)) top++;
+      let bottom = h - 1;
+      while (bottom > top && rowIsBar(bottom)) bottom--;
+      if (top === 0 && bottom === h - 1) return;      // no bars
+      if (bottom - top < h * 0.3) return;             // too little left to trust
+
+      const t = top / h;
+      const b = (bottom + 1) / h;
+      const scale = 1 / (b - t);
+      if (scale > 3) return;                          // implausible, leave it
+      const centre = (t + b) / 2;
+      img.style.transform = `scale(${scale.toFixed(4)}) translateY(${(-(centre - 0.5) * 100).toFixed(2)}%)`;
+    } catch {
+      /* tainted canvas: nothing to do, and nothing broken */
+    }
+  };
+  probe.src = img.src;
+}
+
 function initThumbFallbacks() {
   document.querySelectorAll('img[data-yt]').forEach((img) => {
     const next = () => {
@@ -192,11 +239,8 @@ function initThumbFallbacks() {
     img.addEventListener('load', () => {
       if (img.naturalWidth <= 0) return;
       if (img.naturalWidth <= 120) { next(); return; }
-      /* maxres and mq are true 16:9; sd and hq are 4:3 with the frame
-         letterboxed inside black bars, which otherwise show as a band
-         across the card. Flag those so the CSS can crop them off. */
-      const ratio = img.naturalWidth / img.naturalHeight;
-      img.classList.toggle('is-letterboxed', ratio < 1.6);
+      img.style.transform = '';
+      cropBars(img);
     });
   });
 }

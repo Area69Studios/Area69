@@ -1018,14 +1018,6 @@ textarea {
   transition: filter 0.6s var(--ease);
 }
 
-/* A 4:3 YouTube thumbnail carries the 16:9 frame inside black bars taking
-   an eighth of the height top and bottom. Scaling by 4/3 pushes them past
-   the card's edge, leaving only the frame. */
-.work-media img.is-letterboxed {
-  transform: scale(1.3334);
-  transform-origin: center;
-}
-
 .work-media::after {
   content: "";
   position: absolute;
