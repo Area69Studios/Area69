@@ -190,7 +190,13 @@ function initThumbFallbacks() {
     };
     img.addEventListener('error', next);
     img.addEventListener('load', () => {
-      if (img.naturalWidth > 0 && img.naturalWidth <= 120) next();
+      if (img.naturalWidth <= 0) return;
+      if (img.naturalWidth <= 120) { next(); return; }
+      /* maxres and mq are true 16:9; sd and hq are 4:3 with the frame
+         letterboxed inside black bars, which otherwise show as a band
+         across the card. Flag those so the CSS can crop them off. */
+      const ratio = img.naturalWidth / img.naturalHeight;
+      img.classList.toggle('is-letterboxed', ratio < 1.6);
     });
   });
 }
