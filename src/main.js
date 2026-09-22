@@ -8,7 +8,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import { runPreloader } from './lib/loader.js';
-import { initCursor } from './lib/cursor.js';
 import { initSmoothScroll } from './lib/lenis-scroll.js';
 import { initHeroScene } from './lib/three-hero.js';
 import { initCounters } from './lib/counters.js';
@@ -165,7 +164,6 @@ function initContactForm() {
 
 async function boot() {
   await runPreloader();
-  initCursor();
   initSmoothScroll();
   initHeroScene();
   initNav();

@@ -36,16 +36,6 @@ body {
   font-size: 16px;
   line-height: 1.4;
   overflow-x: hidden;
-  cursor: none;
-}
-
-@media (max-width: 860px), (hover: none) {
-  body {
-    cursor: auto;
-  }
-  #cursor {
-    display: none !important;
-  }
 }
 
 a {
@@ -91,52 +81,6 @@ textarea {
   opacity: 0.045;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-
-/* ============ CURSOR ============ */
-#cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.cursor-dot {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  background: var(--red);
-  border-radius: 50%;
-  transition: transform 0.15s var(--ease), opacity 0.15s var(--ease);
-}
-
-.cursor-ring {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  margin: -20px 0 0 -20px;
-  border: 1px solid var(--white);
-  border-radius: 50%;
-  transition: width 0.25s var(--ease), height 0.25s var(--ease),
-    margin 0.25s var(--ease), border-color 0.25s var(--ease),
-    background 0.25s var(--ease), opacity 0.25s var(--ease);
-  mix-blend-mode: difference;
-}
-
-#cursor.hover .cursor-ring {
-  width: 72px;
-  height: 72px;
-  margin: -36px 0 0 -36px;
-  background: var(--white);
-}
-
-#cursor.hover .cursor-dot {
-  transform: scale(0);
-  opacity: 0;
 }
 
 /* ============ PRELOADER ============ */
@@ -245,6 +189,7 @@ textarea {
   height: 20px;
   position: relative;
   z-index: 600;
+  cursor: pointer;
 }
 
 .nav-toggle span {
@@ -397,6 +342,7 @@ textarea {
   font-size: 13px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  cursor: pointer;
   border-radius: 999px;
   transition: transform 0.35s var(--ease), background 0.35s ease;
 }

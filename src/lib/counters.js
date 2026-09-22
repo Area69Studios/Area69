@@ -15,7 +15,7 @@ export function initCounters() {
           duration: 1.8,
           ease: 'power2.out',
           onUpdate: () => {
-            el.textContent = Math.round(counter.v).toLocaleString('es-MX');
+            el.textContent = Math.round(counter.v).toLocaleString('es-ES');
           },
         });
       },
