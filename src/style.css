@@ -712,8 +712,50 @@ textarea {
 
 /* ============ SERVICIOS ============ */
 #servicios {
+  position: relative;
+  overflow: hidden;
   background: var(--black-2);
   padding-bottom: 100px;
+}
+
+/* Same treatment as the other two, minus the red: with no colour layer the
+   crushed greyscale tops out at a mid-dark grey, which is the "not coloured
+   in yet" read. The cards above it stay opaque -- this shows through the
+   header band and the margins around the grid. */
+.servicios-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.servicios-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  display: block;
+  filter: grayscale(1) contrast(1.25) brightness(0.4);
+}
+
+#servicios .section-head,
+#servicios .services-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* Stacked into one column the cards cover almost the whole section, leaving
+   the picture a sliver. Here it becomes a header band instead, fading out
+   where the grid begins. */
+@media (max-width: 640px) {
+  .servicios-media {
+    bottom: auto;
+    height: 440px;
+    opacity: 0.42;
+    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 96%);
+    mask-image: linear-gradient(to bottom, #000 52%, transparent 96%);
+  }
 }
 
 .services-grid {
