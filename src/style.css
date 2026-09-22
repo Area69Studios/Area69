@@ -1360,20 +1360,51 @@ textarea {
   resize: none;
 }
 
-.field input::placeholder,
-.field textarea::placeholder {
-  color: var(--grey-dim);
-}
-
 .contact-form .btn {
   margin-top: 10px;
   align-self: flex-start;
 }
 
+/* Off-screen rather than display:none — some bots skip anything hidden,
+   and this one is meant to be found and filled. */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.field.is-invalid {
+  border-color: var(--red);
+}
+
 .form-note {
   font-size: 13px;
-  color: var(--red);
   min-height: 18px;
+  color: var(--grey);
+  transition: color 0.3s ease;
+}
+
+.form-note[data-state="error"] {
+  color: var(--red);
+}
+
+.form-note[data-state="ok"] {
+  color: var(--white);
+}
+
+.contact-form .btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* --grey-dim put these at 2.1:1 over the section, and #7c7c83 only reached
+   4.2 — both under the 4.5 AA floor, on the only hint of what each field
+   wants. --grey clears it at 5.1 and is a token already in use. */
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--grey);
 }
 
 /* ============ FOOTER ============ */

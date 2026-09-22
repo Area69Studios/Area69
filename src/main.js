@@ -14,6 +14,7 @@ import { initHeroFluid } from './lib/hero-fluid.js';
 import { initCounters } from './lib/counters.js';
 import { initScrollProgress, initMagneticButtons, initCardGlow, initOutlineFill } from './lib/modern.js';
 import { initSound, play } from './lib/sound.js';
+import { initContactForm } from './lib/contact.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -166,18 +167,6 @@ function eventsReveal() {
         scrollTrigger: { trigger: el, start: 'top 88%' },
       }
     );
-  });
-}
-
-function initContactForm() {
-  const form = document.getElementById('contactForm');
-  const note = document.getElementById('formNote');
-  if (!form) return;
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    note.textContent = 'Señal recibida. AREA69 te contactará pronto.';
-    form.reset();
   });
 }
 

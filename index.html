@@ -293,7 +293,10 @@
       <div class="contact-inner">
         <p class="section-desc reveal-up">¿Tienes una historia que contar?</p>
         <h2 class="giant-outline reveal-up">HABLEMOS</h2>
-        <form class="contact-form reveal-up" id="contactForm">
+        <!-- novalidate: the required/type attributes stay for semantics, but the
+               browser's own bubbles are unstyled and speak its language, not the
+               page's. Validation below covers the same ground in Spanish. -->
+          <form class="contact-form reveal-up" id="contactForm" novalidate>
           <div class="field">
             <label for="name">Nombre</label>
             <input type="text" id="name" name="name" placeholder="Tu nombre" required />
@@ -306,8 +309,14 @@
             <label for="message">Mensaje</label>
             <textarea id="message" name="message" rows="3" placeholder="Cuéntanos tu idea..." required></textarea>
           </div>
+          <!-- not display:none: some bots skip hidden fields, and a real
+               person never reaches this one by tab or by eye -->
+          <div class="hp" aria-hidden="true">
+            <label for="website">No rellenes esto</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
           <button type="submit" class="btn">Enviar señal</button>
-          <p class="form-note" id="formNote"></p>
+          <p class="form-note" id="formNote" role="status" aria-live="polite"></p>
         </form>
       </div>
     </section>
