@@ -88,6 +88,7 @@ const GRADIENT_FRAG = `
 uniform sampler2D uPressure;
 uniform sampler2D uVelocity;
 uniform vec2 texelSize;
+uniform float uMaxVel;
 varying vec2 vUv;
 void main() {
   float L = texture2D(uPressure, vUv - vec2(texelSize.x, 0.0)).x;
@@ -95,6 +96,12 @@ void main() {
   float B = texture2D(uPressure, vUv - vec2(0.0, texelSize.y)).x;
   float T = texture2D(uPressure, vUv + vec2(0.0, texelSize.y)).x;
   vec2 vel = texture2D(uVelocity, vUv).xy - vec2(R - L, T - B) * 0.5;
+
+  // Advection backtraces length(vel)*dt cells per step. Past a couple of
+  // cells it stops carrying the ink and starts teleporting it, so cap the
+  // magnitude rather than trusting the emitter strength to stay in balance.
+  float m = length(vel);
+  vel *= m > uMaxVel ? uMaxVel / m : 1.0;
   gl_FragColor = vec4(vel, 0.0, 1.0);
 }`;
 
@@ -160,12 +167,14 @@ export function initHeroFluid() {
   // flow does not need a tightly converged projection
   const PRESSURE_ITERATIONS = small ? 12 : 16;
 
-  const DENSITY_DISSIPATION = 0.993;
-  const VELOCITY_DISSIPATION = 0.988;
+  const DENSITY_DISSIPATION = 0.997;
+  const VELOCITY_DISSIPATION = 0.985;
   const PRESSURE_DECAY = 0.8;
   // high vorticity amplifies grid-scale noise, which showed up as a cellular
   // speckle rather than smoke; ambient drift does not need much of it
   const CURL_STRENGTH = 16;
+  // how far advection may carry the ink in one step, in grid cells
+  const CFL_CELLS = 1.6;
 
   // the dye buffer is small, so drawing it at 1x costs far less on a
   // high-DPI screen and looks identical once it is this soft
@@ -236,7 +245,7 @@ export function initHeroFluid() {
     texelSize: { value: sim.texel }, curl: { value: CURL_STRENGTH }, dt: { value: 0.016 },
   });
   const pressureMat = mat(PRESSURE_FRAG, { uPressure: { value: null }, uDivergence: { value: null }, texelSize: { value: sim.texel } });
-  const gradientMat = mat(GRADIENT_FRAG, { uPressure: { value: null }, uVelocity: { value: null }, texelSize: { value: sim.texel } });
+  const gradientMat = mat(GRADIENT_FRAG, { uPressure: { value: null }, uVelocity: { value: null }, texelSize: { value: sim.texel }, uMaxVel: { value: 60 } });
   const clearMat = mat(CLEAR_FRAG, { uTexture: { value: null }, value: { value: PRESSURE_DECAY } });
   const splatMat = mat(SPLAT_FRAG, {
     uTarget: { value: null }, aspectRatio: { value: 1 },
@@ -283,9 +292,9 @@ export function initHeroFluid() {
      bright head — it read as a moving dot, not as smoke — and stalled into a
      dense blob wherever its path slowed down. */
   const emitters = [
-    { cx: 0.22, cy: 0.42, ax: 0.14, ay: 0.20, fx: 0.11, fy: 0.08, px: 0.0, fr: 0.13, pr: 0.0, force: 900 },
-    { cx: 0.78, cy: 0.56, ax: 0.15, ay: 0.18, fx: 0.09, fy: 0.12, px: 2.1, fr: -0.11, pr: 2.4, force: 900 },
-    { cx: 0.5, cy: 0.78, ax: 0.22, ay: 0.12, fx: 0.07, fy: 0.15, px: 4.2, fr: 0.16, pr: 4.1, force: 820 },
+    { cx: 0.22, cy: 0.42, ax: 0.14, ay: 0.20, fx: 0.11, fy: 0.08, px: 0.0, fr: 0.13, pr: 0.0, force: 40 },
+    { cx: 0.78, cy: 0.56, ax: 0.15, ay: 0.18, fx: 0.09, fy: 0.12, px: 2.1, fr: -0.11, pr: 2.4, force: 40 },
+    { cx: 0.5, cy: 0.78, ax: 0.22, ay: 0.12, fx: 0.07, fy: 0.15, px: 4.2, fr: 0.16, pr: 4.1, force: 36 },
   ];
 
   let elapsedTime = Math.random() * 40;
@@ -299,7 +308,8 @@ export function initHeroFluid() {
       const ang = t * e.fr + e.pr;
       const [r, g, b] = inkColor();
       const k = 0.17 * gain;
-      splat(x, y, Math.cos(ang) * e.force, Math.sin(ang) * e.force, r * k, g * k, b * k, 0.006);
+      const f = e.force * gain;
+      splat(x, y, Math.cos(ang) * f, Math.sin(ang) * f, r * k, g * k, b * k, 0.006);
     }
   }
 
@@ -310,7 +320,7 @@ export function initHeroFluid() {
       const x = 0.5 + Math.cos(a) * rad;
       const y = 0.52 + Math.sin(a) * rad;
       const [r, g, b] = inkColor();
-      splat(x, y, Math.cos(a) * 1500, Math.sin(a) * 1500, r * 1.1, g * 1.1, b * 1.1, 0.008);
+      splat(x, y, Math.cos(a) * 80, Math.sin(a) * 80, r * 1.1, g * 1.1, b * 1.1, 0.008);
     }
   }
 
@@ -370,6 +380,8 @@ export function initHeroFluid() {
       sim.pressure.swap();
     }
 
+    // keep the worst-case backtrace at CFL_CELLS regardless of frame time
+    gradientMat.uniforms.uMaxVel.value = CFL_CELLS / dt;
     gradientMat.uniforms.uPressure.value = sim.pressure.read.texture;
     gradientMat.uniforms.uVelocity.value = sim.velocity.read.texture;
     blit(gradientMat, sim.velocity.write);
