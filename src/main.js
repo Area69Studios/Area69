@@ -10,7 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import { runPreloader } from './lib/loader.js';
 import { initSmoothScroll } from './lib/lenis-scroll.js';
-import { initHeroScene } from './lib/three-hero.js';
+import { initHeroFluid } from './lib/hero-fluid.js';
 import { initCounters } from './lib/counters.js';
 import { initScrollProgress, initMagneticButtons, initCardGlow, initOutlineFill } from './lib/modern.js';
 
@@ -183,7 +183,7 @@ function initContactForm() {
 async function boot() {
   await runPreloader();
   initSmoothScroll();
-  initHeroScene();
+  initHeroFluid();
   initNav();
   heroIntro();
   manifestoScrollytelling();
