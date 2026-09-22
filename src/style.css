@@ -108,68 +108,78 @@ textarea {
   place-items: center;
 }
 
+/* mark, rule and meta share one column, so the three read as a lockup
+   rather than as elements scattered at the screen edges */
+.pre-lockup {
+  width: fit-content;
+  max-width: calc(100vw - 40px);
+}
+
 .pre-stage {
-  position: relative;
+  display: flex;
+  justify-content: center;
   will-change: transform;
 }
 
-.pre-word {
+/* one mask per character: the edge doing the revealing is what makes a
+   rise read as a move rather than as a fade */
+.pre-m {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.05em;
+}
+
+.pre-c {
   display: block;
   font-family: var(--font-logo);
   font-style: normal;
-  font-size: clamp(170px, 46vw, 620px);
+  font-size: clamp(140px, 32vw, 380px);
   line-height: 0.86;
   letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-/* the empty vessel */
-.pre-ghost,
-.pre-ghost b {
-  color: rgb(255 255 255 / 0.14);
-  font-weight: inherit;
-}
-
-/* the same mark in its real colours, revealed only up to the ink line */
-.pre-fill {
-  position: absolute;
-  inset: 0;
   color: var(--white);
-  /* JS drives this; the flat start keeps the first frame from flashing */
-  clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+  transform: translate3d(0, 115%, 0);
 }
 
-.pre-fill b {
-  font-weight: inherit;
+.pre-c.is-red {
   color: var(--red);
 }
 
+.pre-rule {
+  height: 1px;
+  margin-top: 26px;
+  background: rgb(255 255 255 / 0.1);
+  overflow: hidden;
+}
+
+.pre-rule i {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  will-change: transform;
+}
+
 .pre-meta {
-  position: absolute;
-  left: clamp(20px, 6vw, 48px);
-  right: clamp(20px, 6vw, 48px);
-  bottom: clamp(30px, 5vh, 48px);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  margin-top: 12px;
   font-size: 10px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--grey-dim);
   opacity: 0;
 }
 
 .pre-count {
-  color: var(--red);
+  color: var(--grey);
   font-variant-numeric: tabular-nums;
 }
 
-
-/* 46vw leaves the mark floating on a tall phone screen; here it should fill
-   the width the way it fills the frame on a desktop */
 @media (max-width: 640px) {
-  .pre-word {
-    font-size: 108vw;
+  .pre-c {
+    font-size: 34vw;
   }
 }
 

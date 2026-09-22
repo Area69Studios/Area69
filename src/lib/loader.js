@@ -1,26 +1,8 @@
 import { gsap } from 'gsap';
 
-/* The mark is the progress bar: red ink rises through the letterforms and
-   the logo develops out of its own outline. The surface is a real wave, so
-   it reads as liquid rather than as a bar with a straight top edge. */
-const POINTS = 18;
-const WAVE = 2.2;   // % of the mark's height
-const SPEED = 1.9;  // radians per second
-
-function inkPath(level, t) {
-  // level: 0 empty, 1 full. y is measured from the top in clip-path space.
-  const base = 100 - level * 100;
-  // flatten as it tops out, so the finished mark has a clean edge
-  const amp = WAVE * Math.min(1, (1 - level) * 3.2);
-  const pts = [];
-  for (let i = 0; i <= POINTS; i++) {
-    const x = (i / POINTS) * 100;
-    const y = base + amp * Math.sin((i / POINTS) * Math.PI * 3 + t * SPEED);
-    pts.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
-  }
-  pts.push('100% 100%', '0% 100%');
-  return `polygon(${pts.join(',')})`;
-}
+/* Everything here animates transform and opacity only. Nothing repaints per
+   frame, which is what keeps the sequence smooth under load — the page's own
+   setup runs behind this panel while it is still. */
 
 export function runPreloader() {
   return new Promise((resolve) => {
@@ -28,7 +10,8 @@ export function runPreloader() {
     if (!pre) { resolve(); return; }
 
     const stage = pre.querySelector('.pre-stage');
-    const fill = pre.querySelector('.pre-fill');
+    const chars = pre.querySelectorAll('.pre-c');
+    const rule = pre.querySelector('.pre-rule i');
     const meta = pre.querySelector('.pre-meta');
     const count = pre.querySelector('.pre-count');
 
@@ -38,56 +21,61 @@ export function runPreloader() {
     };
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      fill.style.clipPath = 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)';
+      gsap.set(chars, { y: '0%' });
+      gsap.set(rule, { scaleX: 1 });
+      gsap.set(meta, { opacity: 1 });
       count.textContent = '100';
       gsap.to(pre, { opacity: 0, duration: 0.4, onComplete: () => { finish(); resolve(); } });
       return;
     }
 
-    const state = { v: 0, t: 0 };
-
-    // the wave keeps moving even where the level pauses
-    const waveTicker = gsap.to(state, { t: 100, duration: 100, ease: 'none' });
-
-    /* Painting is a repaint of a 620px text layer, so it stops the moment
-       the level tops out — nothing changes after that, and the exit needs
-       every frame it can get for the transform. */
-    let painting = true;
-    const paint = () => {
-      if (!painting) return;
-      fill.style.clipPath = inkPath(state.v / 100, state.t);
-      count.textContent = String(Math.round(state.v)).padStart(3, '0');
-    };
-    gsap.ticker.add(paint);
+    const progress = { v: 0 };
 
     gsap.timeline()
-      .to(meta, { opacity: 1, duration: 0.55, ease: 'power2.out' }, 0.12)
+      /* Each character clears its own mask, a beat apart. The stagger is what
+         gives the entrance its shape; all three at once is just a slab. */
+      .to(chars, {
+        y: '0%',
+        duration: 1.0,
+        ease: 'expo.out',
+        stagger: 0.085,
+      })
+      // a settle on the whole mark, slower than the characters, so it comes
+      // to rest after them rather than with them
+      .from(stage, { scale: 1.05, duration: 1.25, ease: 'power2.out' }, 0)
+      .to(meta, { opacity: 1, duration: 0.55, ease: 'power2.out' }, 0.4)
+      .to(progress, {
+        v: 100,
+        duration: 0.95,
+        ease: 'power1.inOut',
+        onUpdate: () => {
+          count.textContent = String(Math.round(progress.v)).padStart(3, '0');
+          gsap.set(rule, { scaleX: progress.v / 100 });
+        },
+      }, 0.35)
 
-      /* One unbroken rise. This used to climb in three surges with a beat
-         between them, which did not read as pouring — it read as stalling. */
-      .to(state, { v: 100, duration: 1.1, ease: 'power1.inOut' }, 0.12)
+      .addLabel('out', '+=0.08')
 
-      .addLabel('out', '+=0.14')
-      .to(meta, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 'out')
+      // the mark leaves the way it arrived, back through its own masks
+      .to(chars, {
+        y: '-115%',
+        duration: 0.5,
+        ease: 'power3.inOut',
+        stagger: 0.055,
+      }, 'out')
+      .to(meta, { opacity: 0, duration: 0.32, ease: 'power2.in' }, 'out')
+      .to(rule, { scaleY: 0, duration: 0.32, ease: 'power2.in' }, 'out+=0.1')
 
-      /* power2.inOut, not expo.inOut. Over a 900px travel expo moves 93px in
-         a single frame at its steepest — a tenth of the distance at once,
-         which the eye reads as a cut rather than a move. This caps it at 30px.
-         The mark trails the panel: two speeds are what give the exit depth. */
+      /* power2.inOut, not expo.inOut: over a full-viewport travel expo moves
+         a tenth of the distance in its steepest frame, which the eye reads as
+         a cut. Resolving partway through hands the hero its intro while the
+         panel is still moving, so there is no seam. */
       .to(pre, {
         yPercent: -100,
-        duration: 0.95,
+        duration: 0.9,
         ease: 'power2.inOut',
-        onStart: () => {
-          painting = false;
-          gsap.ticker.remove(paint);
-          gsap.delayedCall(0.3, resolve);
-        },
-        onComplete: () => {
-          waveTicker.kill();
-          finish();
-        },
-      }, 'out')
-      .to(stage, { yPercent: -42, duration: 0.95, ease: 'power2.inOut' }, 'out');
+        onStart: () => { gsap.delayedCall(0.3, resolve); },
+        onComplete: finish,
+      }, 'out+=0.35');
   });
 }
