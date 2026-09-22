@@ -827,6 +827,57 @@ textarea {
   margin-top: 6px;
 }
 
+/* Kept visible rather than revealed on hover: phones have no hover, and this
+   is the only way to reach the films from here. */
+.work-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(10, 10, 11, 0.55);
+  backdrop-filter: blur(4px);
+  color: var(--white);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s var(--ease);
+}
+
+.work-link svg {
+  width: 16px;
+  height: auto;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.work-card:hover .work-link,
+.work-link:hover {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.work-link:hover {
+  transform: translateY(-2px);
+}
+
+.work-link:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+/* 35px is under the 44px comfortable tap target, and on a phone this is the
+   card's only action -- there is no hover to fall back on */
+@media (hover: none) {
+  .work-link {
+    min-height: 44px;
+    padding-inline: 18px;
+  }
+}
+
 /* ============ STATS ============ */
 #stats {
   background: var(--black-2);
