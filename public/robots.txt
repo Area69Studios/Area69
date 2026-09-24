@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://area69studios.github.io/Area69/sitemap.xml
