@@ -1279,6 +1279,22 @@ textarea {
   transform: translateY(-6px);
 }
 
+/* The Netflix pop: the card grows past its own footprint and sits above
+   its neighbours rather than just losing its tint. transform does not
+   take up layout space, so it overlaps siblings instead of shoving them
+   -- z-index is what keeps that overlap on top regardless of DOM order,
+   and the shadow is what sells it as lifted rather than just bigger.
+   Touch has no real hover to leave, so a card can be left mid-pop after
+   a tap with nothing to undo it -- this stays behind (hover: hover). */
+@media (hover: hover) {
+  .work-card:hover {
+    transform: translateY(-6px) scale(1.07);
+    z-index: 5;
+    box-shadow: 0 28px 56px -16px rgba(0, 0, 0, 0.65), 0 0 0 1px rgb(226 38 28 / 0.3);
+    transition: border-color 0.4s ease, transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+  }
+}
+
 .work-card:hover::before {
   opacity: 1;
 }
