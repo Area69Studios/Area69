@@ -296,9 +296,8 @@ function initVideoPreviews() {
   const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
 
   document.querySelectorAll('.work-card').forEach((card) => {
-    const link = card.querySelector('.work-link');
     const media = card.querySelector('.work-media');
-    const match = link && ID_RE.exec(link.href);
+    const match = ID_RE.exec(card.href);
     if (!match || !media) return;
     const id = match[1];
 

@@ -71,16 +71,17 @@ export function initDepartureTransition() {
     });
   }
 
-  document.querySelectorAll('.work-card .work-link').forEach((link) => {
-    link.addEventListener('click', (e) => {
+  // la tarjeta entera es el enlace; ya no hay un boton separado dentro
+  document.querySelectorAll('a.work-card').forEach((card) => {
+    card.addEventListener('click', (e) => {
       // un modificador significa que el usuario ya esta pidiendo su propio
       // comportamiento (pestaña en segundo plano, ventana nueva...) -- eso
       // se respeta tal cual, sin interponer nada
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
 
-      const href = link.href;
-      const cardTitle = link.closest('.work-card')?.querySelector('h3')?.textContent.trim() || 'AREA69';
+      const href = card.href;
+      const cardTitle = card.querySelector('h3')?.textContent.trim() || 'AREA69';
 
       play('transition');
       run(cardTitle).then(() => { window.location.href = href; });

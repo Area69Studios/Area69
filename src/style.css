@@ -1309,55 +1309,43 @@ textarea {
   margin-top: 6px;
 }
 
-/* Kept visible rather than revealed on hover: phones have no hover, and this
-   is the only way to reach the films from here. */
-.work-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 9px 16px;
+/* The whole card is the link now, so this is a cue, not a control: it
+   never needs its own hit target or a visible-on-touch fallback like the
+   button it replaced did, because tapping anywhere on the card already
+   works without it. */
+.work-yt {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
   background: rgba(10, 10, 11, 0.55);
   backdrop-filter: blur(4px);
-  color: var(--white);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s var(--ease);
+  opacity: 0.55;
+  transition: opacity 0.3s ease, background 0.3s ease, border-color 0.3s ease, transform 0.3s var(--ease);
 }
 
-.work-link svg {
-  width: 16px;
+.work-yt svg {
+  width: 15px;
   height: auto;
-  fill: currentColor;
-  flex-shrink: 0;
+  fill: var(--white);
 }
 
-.work-card:hover .work-link,
-.work-link:hover {
+.work-card:hover .work-yt {
+  opacity: 1;
   background: var(--red);
   border-color: var(--red);
+  transform: scale(1.08);
 }
 
-.work-link:hover {
-  transform: translateY(-2px);
-}
-
-.work-link:focus-visible {
+.work-card:focus-visible {
   outline: 2px solid var(--white);
   outline-offset: 3px;
-}
-
-/* 35px is under the 44px comfortable tap target, and on a phone this is the
-   card's only action -- there is no hover to fall back on */
-@media (hover: none) {
-  .work-link {
-    min-height: 44px;
-    padding-inline: 18px;
-  }
 }
 
 /* ============ STATS ============ */
