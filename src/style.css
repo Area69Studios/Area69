@@ -1348,6 +1348,37 @@ textarea {
   outline-offset: 3px;
 }
 
+/* Netflix-style watch bar. It only has anything to show while the preview
+   in .work-video is actually playing -- there is no server-side watch
+   history behind it, so it stays flat and invisible the rest of the time
+   rather than sit there at 0% pretending to mean something. */
+.work-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.work-progress.is-active {
+  opacity: 1;
+}
+
+.work-progress i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--red);
+  box-shadow: 0 0 8px rgb(226 38 28 / 0.7);
+  /* la propia barra ya llega a saltos de ~250ms via postMessage; suavizar
+     esos saltos aqui es mas barato que interpolar el tiempo a mano */
+  transition: width 0.25s linear;
+}
+
 /* ============ STATS ============ */
 #stats {
   background: var(--black-2);

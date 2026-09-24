@@ -284,10 +284,19 @@ function initThumbFallbacks() {
 }
 
 /* A silent preview that only starts once someone actually pauses on a
-   card, not while scrolling past it. The id comes off the "Ver en
-   YouTube" link already on every card, so no markup has to carry it
-   twice. Destroying the iframe on mouseleave (rather than pausing it)
-   is what guarantees the audio and the network request actually stop. */
+   card, not while scrolling past it. The id comes off the card's own
+   href. Destroying the iframe on mouseleave (rather than pausing it) is
+   what guarantees the audio and the network request actually stop.
+
+   enablejsapi turns on the postMessage protocol the embed already
+   speaks: send it {event:"listening"} once and it broadcasts its own
+   currentTime/duration a few times a second on its own, no polling from
+   here. That is what drives the red progress bar -- real position in
+   the preview that is actually playing on the card, not a guess and not
+   anything YouTube would have to be asked for over an API key this site
+   does not have. It resets every loop and has nothing to do with
+   whatever a visitor watched on YouTube itself last time; there is no
+   way to reach that from here. */
 function initVideoPreviews() {
   if (window.matchMedia('(hover: none)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -295,8 +304,26 @@ function initVideoPreviews() {
   const HOVER_DELAY = 2500;
   const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
 
+  // contentWindow -> the <i> bar to drive, so an infoDelivery message can
+  // find its card without searching the dom for it
+  const players = new Map();
+
+  window.addEventListener('message', (e) => {
+    if (e.origin !== 'https://www.youtube.com') return;
+    const bar = players.get(e.source);
+    if (!bar) return;
+    let data;
+    try { data = JSON.parse(e.data); } catch { return; }
+    if (data.event !== 'infoDelivery' || !data.info) return;
+    const { currentTime, duration } = data.info;
+    if (!duration) return;
+    bar.style.width = `${Math.min(100, Math.max(0, (currentTime / duration) * 100))}%`;
+  });
+
   document.querySelectorAll('.work-card').forEach((card) => {
     const media = card.querySelector('.work-media');
+    const progress = card.querySelector('.work-progress');
+    const bar = progress?.querySelector('i');
     const match = ID_RE.exec(card.href);
     if (!match || !media) return;
     const id = match[1];
@@ -307,7 +334,14 @@ function initVideoPreviews() {
     const stop = () => {
       clearTimeout(timer);
       timer = null;
-      if (wrap) { wrap.remove(); wrap = null; }
+      if (wrap) {
+        const iframe = wrap.querySelector('iframe');
+        if (iframe?.contentWindow) players.delete(iframe.contentWindow);
+        wrap.remove();
+        wrap = null;
+      }
+      progress?.classList.remove('is-active');
+      if (bar) bar.style.width = '0%';
     };
 
     const start = () => {
@@ -317,7 +351,8 @@ function initVideoPreviews() {
       wrap = document.createElement('div');
       wrap.className = 'work-video';
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&rel=0&iv_load_policy=3`;
+      const origin = encodeURIComponent(window.location.origin);
+      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&rel=0&iv_load_policy=3&enablejsapi=1&origin=${origin}`;
       iframe.title = '';
       iframe.tabIndex = -1;
       iframe.setAttribute('allow', 'autoplay; encrypted-media');
@@ -326,6 +361,21 @@ function initVideoPreviews() {
       wrap.appendChild(iframe);
       media.appendChild(wrap);
       requestAnimationFrame(() => wrap.classList.add('is-active'));
+
+      if (bar) {
+        progress.classList.add('is-active');
+        if (iframe.contentWindow) players.set(iframe.contentWindow, bar);
+        // the embed's own message listener is not necessarily up yet the
+        // instant it loads, so the handshake is repeated a few times
+        // rather than sent once and hoped for
+        let pings = 0;
+        const ping = () => {
+          if (!iframe.isConnected) return;
+          iframe.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id }), 'https://www.youtube.com');
+          if (++pings < 6) setTimeout(ping, 400);
+        };
+        iframe.addEventListener('load', ping);
+      }
     };
 
     card.addEventListener('mouseenter', () => { timer = setTimeout(start, HOVER_DELAY); });
