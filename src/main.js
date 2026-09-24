@@ -265,11 +265,22 @@ function cropByPixels(img, floor) {
   probe.src = `${img.src}${img.src.includes('?') ? '&' : '?'}x=cors`;
 }
 
+/* The shimmer lives on .work-media's own background -- nothing extra in the
+   DOM. While the <img> has nothing to paint the sweep shows straight
+   through it; once the image loads, object-fit: cover already covers the
+   whole card, so the animation underneath is simply never seen again. The
+   one case that needs a real signal is total failure (every size in
+   YT_SIZES exhausted): nothing will ever cover it, so left alone it would
+   shimmer forever as if still loading. */
+function settleShimmer(img, ok) {
+  img.closest('.work-media')?.classList.add(ok ? 'is-loaded' : 'is-empty');
+}
+
 function initThumbFallbacks() {
   document.querySelectorAll('img[data-yt]').forEach((img) => {
     const next = () => {
       const step = Number(img.dataset.ytStep || 0) + 1;
-      if (step >= YT_SIZES.length) return; // nothing left to try
+      if (step >= YT_SIZES.length) { settleShimmer(img, false); return; } // nothing left to try
       img.dataset.ytStep = String(step);
       img.src = `https://i.ytimg.com/vi/${img.dataset.yt}/${YT_SIZES[step]}.jpg`;
     };
@@ -277,10 +288,19 @@ function initThumbFallbacks() {
     img.addEventListener('load', () => {
       if (img.naturalWidth <= 0) return;
       if (img.naturalWidth <= 120) { next(); return; }
+      settleShimmer(img, true);
       const byRatio = cropByRatio(img);
       applyCrop(img, byRatio, 0.5);
       cropByPixels(img, byRatio);
     });
+  });
+
+  // the local covers (JOHN JOHNSON 1-4) carry no data-yt and no retry
+  // chain -- whatever the first settle says is the only one there is
+  document.querySelectorAll('.work-media img:not([data-yt])').forEach((img) => {
+    if (img.complete && img.naturalWidth > 0) { settleShimmer(img, true); return; }
+    img.addEventListener('load', () => settleShimmer(img, true), { once: true });
+    img.addEventListener('error', () => settleShimmer(img, false), { once: true });
   });
 }
 

@@ -1188,12 +1188,46 @@ textarea {
 
 /* Cover art: matte black + red duotone at rest, full colour on hover.
    isolation keeps the blend from reaching the card's text and scrim. */
+/* Shimmer while the cover is still loading -- YouTube's thumbnails have
+   been the slow, occasionally-wrong part of this card from the start
+   (the letterbox and fallback-chain work above is the same story), so
+   this is a real loading state, not just decoration for its own sake.
+   It rides on .work-media's own background rather than an extra element:
+   the <img> above it is transparent until it has something to paint, and
+   once it does (object-fit: cover, full bleed) the animation underneath
+   is simply never seen again. */
 .work-media {
   position: absolute;
   inset: 0;
   z-index: 0;
   isolation: isolate;
   pointer-events: none;
+  background: linear-gradient(100deg, var(--black-3) 25%, var(--black-2) 50%, var(--black-3) 75%);
+  background-size: 200% 100%;
+  animation: work-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes work-shimmer {
+  0% { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* both settled states stop the animation -- .is-loaded because the image
+   already covers it and an infinite animation running unseen forever is
+   still wasted work, .is-empty because nothing is ever going to cover it
+   and a sweep that never resolves would read as still-loading rather
+   than as the card falling back to its own plain background */
+.work-media.is-loaded,
+.work-media.is-empty {
+  animation: none;
+  background: linear-gradient(160deg, var(--black-3), var(--black-2));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-media {
+    animation: none;
+    background: linear-gradient(160deg, var(--black-3), var(--black-2));
+  }
 }
 
 .work-media img {
