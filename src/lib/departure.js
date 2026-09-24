@@ -32,6 +32,7 @@ export function initDepartureTransition() {
 
   const title = overlay.querySelector('.dep-title');
   const els = overlay.querySelectorAll('.dep-eyebrow, .dep-line, .dep-title, .dep-dest');
+  const setting = overlay.querySelectorAll('.dep-frame, .dep-mark');
   const rule = overlay.querySelector('.dep-rule i');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -44,25 +45,29 @@ export function initDepartureTransition() {
         overlay.classList.remove('is-active');
         gsap.set(overlay, { clearProps: 'opacity' });
         gsap.set(els, { clearProps: 'opacity,transform' });
+        gsap.set(setting, { clearProps: 'opacity' });
         gsap.set(rule, { clearProps: 'transform' });
         resolve();
       };
 
       if (reduced) {
         gsap.set(overlay, { opacity: 1 });
-        gsap.set(els, { opacity: 1 });
+        gsap.set([els, setting], { opacity: 1 });
         gsap.set(rule, { scaleX: 1 });
         gsap.delayedCall(0.5, finish);
         return;
       }
 
+      // el visor y la marca se asientan primero, como si la pantalla se
+      // enfocara; el texto llega encima de esa base, no a la vez
       gsap.timeline({ onComplete: finish })
         .set(overlay, { opacity: 1 })
+        .to(setting, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 0)
         .fromTo(els, { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.05 })
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.05 }, 0.15)
         .to(rule, { scaleX: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.15')
-        .to({}, { duration: 0.2 }) // un instante de lectura antes de salir
-        .to(overlay, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+        .to({}, { duration: 0.3 }) // un instante de lectura antes de salir
+        .to(overlay, { opacity: 0, duration: 0.35, ease: 'power2.in' });
     });
   }
 
