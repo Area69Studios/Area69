@@ -6,13 +6,26 @@ import { play } from './sound.js';
    means the site never gets to say anything on the way out. This is the
    one beat where it does.
 
-   It never touches the navigation itself. An earlier version opened a
-   blank tab on click and pointed it at the real URL once this animation
-   finished, to line the two up -- but a tab navigated outside the
-   original click's gesture is exactly what Safari on iOS silently
-   refuses: the tab opened, sat on about:blank, and never went anywhere.
-   The <a target="_blank"> already does this instantly and reliably on
-   every browser; this is only ever a decoration running alongside it. */
+   Two things this animation is not allowed to fight:
+
+   1. It cannot delay a NEW tab opening. A tab navigated by script after
+      the click's own gesture has passed is exactly what Safari on iOS
+      silently refuses -- an earlier version tried that (open blank,
+      point it at the real URL once the animation finished) and the tab
+      just sat on about:blank forever.
+   2. It also cannot let navigation happen instantly and unintercepted,
+      because then there is nothing left to watch -- the browser switches
+      to the new tab the moment the click lands, before a single frame of
+      the animation has painted. That was the next thing this went
+      through, and it is what left the transition running on a tab
+      nobody was still looking at.
+
+   The way out of both at once: stay on THIS tab. Prevent the default
+   navigation, run the animation here, and once it ends send the CURRENT
+   tab to the video with location.href. A popup blocker only ever
+   watches for new windows -- navigating the tab a script is already
+   running in is not something any browser gates behind a fresh gesture,
+   so this needs none of the tricks the other two approaches did. */
 export function initDepartureTransition() {
   const overlay = document.getElementById('departure');
   if (!overlay) return;
@@ -23,31 +36,34 @@ export function initDepartureTransition() {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function run(projectTitle) {
-    title.textContent = projectTitle;
-    overlay.classList.add('is-active');
+    return new Promise((resolve) => {
+      title.textContent = projectTitle;
+      overlay.classList.add('is-active');
 
-    const finish = () => {
-      overlay.classList.remove('is-active');
-      gsap.set(overlay, { clearProps: 'opacity' });
-      gsap.set(els, { clearProps: 'opacity,transform' });
-      gsap.set(rule, { clearProps: 'transform' });
-    };
+      const finish = () => {
+        overlay.classList.remove('is-active');
+        gsap.set(overlay, { clearProps: 'opacity' });
+        gsap.set(els, { clearProps: 'opacity,transform' });
+        gsap.set(rule, { clearProps: 'transform' });
+        resolve();
+      };
 
-    if (reduced) {
-      gsap.set(overlay, { opacity: 1 });
-      gsap.set(els, { opacity: 1 });
-      gsap.set(rule, { scaleX: 1 });
-      gsap.delayedCall(0.5, finish);
-      return;
-    }
+      if (reduced) {
+        gsap.set(overlay, { opacity: 1 });
+        gsap.set(els, { opacity: 1 });
+        gsap.set(rule, { scaleX: 1 });
+        gsap.delayedCall(0.5, finish);
+        return;
+      }
 
-    gsap.timeline({ onComplete: finish })
-      .set(overlay, { opacity: 1 })
-      .fromTo(els, { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.05 })
-      .to(rule, { scaleX: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.15')
-      .to({}, { duration: 0.2 }) // un instante de lectura antes de salir
-      .to(overlay, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+      gsap.timeline({ onComplete: finish })
+        .set(overlay, { opacity: 1 })
+        .fromTo(els, { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.05 })
+        .to(rule, { scaleX: 1, duration: 0.5, ease: 'power2.inOut' }, '-=0.15')
+        .to({}, { duration: 0.2 }) // un instante de lectura antes de salir
+        .to(overlay, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    });
   }
 
   document.querySelectorAll('.work-card .work-link').forEach((link) => {
@@ -56,11 +72,13 @@ export function initDepartureTransition() {
       // comportamiento (pestaña en segundo plano, ventana nueva...) -- eso
       // se respeta tal cual, sin interponer nada
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
 
+      const href = link.href;
       const cardTitle = link.closest('.work-card')?.querySelector('h3')?.textContent.trim() || 'AREA69';
+
       play('transition');
-      run(cardTitle);
-      // sin preventDefault: el propio <a> navega ya, tal cual siempre hizo
+      run(cardTitle).then(() => { window.location.href = href; });
     });
   });
 }
