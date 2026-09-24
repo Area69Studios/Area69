@@ -16,6 +16,7 @@ import { initScrollProgress, initMagneticButtons, initCardGlow, initOutlineFill 
 import { initSound, play } from './lib/sound.js';
 import { initContactForm } from './lib/contact.js';
 import { initDepartureTransition } from './lib/departure.js';
+import { isWatched } from './lib/watched.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -297,6 +298,8 @@ function initThumbFallbacks() {
    does not have. It resets every loop and has nothing to do with
    whatever a visitor watched on YouTube itself last time; there is no
    way to reach that from here. */
+const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
+
 function initVideoPreviews() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   // Data Saver is the visitor telling the browser to keep data usage down;
@@ -305,7 +308,6 @@ function initVideoPreviews() {
 
   const hasHover = window.matchMedia('(hover: hover)').matches;
   const HOVER_DELAY = 2500;
-  const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
 
   // contentWindow -> the <i> bar to drive, so an infoDelivery message can
   // find its card without searching the dom for it
@@ -344,7 +346,9 @@ function initVideoPreviews() {
         wrap = null;
       }
       progress?.classList.remove('is-active');
-      if (bar) bar.style.width = '0%';
+      // clears the live-playback override, not the width itself -- if the
+      // card is marked watched, CSS is what puts the bar back to full
+      if (bar) bar.style.width = '';
     };
 
     const start = () => {
@@ -432,6 +436,18 @@ function initVideoPreviews() {
   });
 }
 
+/* A static "already opened this" mark, independent of the preview above --
+   it is not motion and it costs no data, so it runs regardless of
+   reduced-motion or Data Saver. CSS does the actual fill (.is-watched i);
+   this only ever adds the class. */
+function initWatchedBars() {
+  document.querySelectorAll('.work-card').forEach((card) => {
+    const match = ID_RE.exec(card.href);
+    const bar = card.querySelector('.work-progress');
+    if (match && bar && isWatched(match[1])) bar.classList.add('is-watched');
+  });
+}
+
 function initEventDetails() {
   document.querySelectorAll('.event-link[aria-controls]').forEach((btn) => {
     const note = document.getElementById(btn.getAttribute('aria-controls'));
@@ -477,6 +493,7 @@ async function boot() {
   eventsReveal();
   initThumbFallbacks();
   initVideoPreviews();
+  initWatchedBars();
   initDepartureTransition();
   initEventDetails();
   initContactForm();

@@ -1,5 +1,8 @@
 import { gsap } from 'gsap';
 import { play } from './sound.js';
+import { markWatched } from './watched.js';
+
+const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
 
 /* Everything in Proyectos producidos goes off-site, to YouTube. Leaving
    cold -- link click, new tab, gone -- is the normal web, but it also
@@ -74,6 +77,11 @@ export function initDepartureTransition() {
   // la tarjeta entera es el enlace; ya no hay un boton separado dentro
   document.querySelectorAll('a.work-card').forEach((card) => {
     card.addEventListener('click', (e) => {
+      // cuenta como visto en cualquier forma de clic, incluida la que se
+      // deja pasar tal cual mas abajo (Ctrl+clic, pestaña en segundo plano)
+      const match = ID_RE.exec(card.href);
+      if (match) markWatched(match[1]);
+
       // un modificador significa que el usuario ya esta pidiendo su propio
       // comportamiento (pestaña en segundo plano, ventana nueva...) -- eso
       // se respeta tal cual, sin interponer nada

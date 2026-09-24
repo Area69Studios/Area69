@@ -1355,10 +1355,13 @@ textarea {
   outline-offset: 3px;
 }
 
-/* Netflix-style watch bar. It only has anything to show while the preview
-   in .work-video is actually playing -- there is no server-side watch
-   history behind it, so it stays flat and invisible the rest of the time
-   rather than sit there at 0% pretending to mean something. */
+/* Netflix-style watch bar. Two different things fill it and neither is a
+   server-side watch position -- YouTube gives that number to no one:
+   .is-active is the preview in .work-video actually playing right now,
+   .is-watched is "this browser has clicked through to this video before"
+   (localStorage, set on click in departure.js). With nothing to show it
+   stays flat and invisible rather than sit at 0% pretending to mean
+   something. */
 .work-progress {
   position: absolute;
   left: 0;
@@ -1371,6 +1374,7 @@ textarea {
   transition: opacity 0.3s ease;
 }
 
+.work-progress.is-watched,
 .work-progress.is-active {
   opacity: 1;
 }
@@ -1384,6 +1388,13 @@ textarea {
   /* la propia barra ya llega a saltos de ~250ms via postMessage; suavizar
      esos saltos aqui es mas barato que interpolar el tiempo a mano */
   transition: width 0.25s linear;
+}
+
+/* mas especifica que la regla de arriba a proposito: gana en reposo, pero
+   una vista previa en marcha sigue pudiendo escribir su propio ancho por
+   estilo en linea, que siempre pesa mas que una clase */
+.work-progress.is-watched i {
+  width: 100%;
 }
 
 /* ============ STATS ============ */
