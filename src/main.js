@@ -298,9 +298,12 @@ function initThumbFallbacks() {
    whatever a visitor watched on YouTube itself last time; there is no
    way to reach that from here. */
 function initVideoPreviews() {
-  if (window.matchMedia('(hover: none)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Data Saver is the visitor telling the browser to keep data usage down;
+  // an autoplaying preview is exactly what that setting exists to prevent
+  if (navigator.connection?.saveData) return;
 
+  const hasHover = window.matchMedia('(hover: hover)').matches;
   const HOVER_DELAY = 2500;
   const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
 
@@ -378,8 +381,50 @@ function initVideoPreviews() {
       }
     };
 
-    card.addEventListener('mouseenter', () => { timer = setTimeout(start, HOVER_DELAY); });
-    card.addEventListener('mouseleave', stop);
+    if (hasHover) {
+      card.addEventListener('mouseenter', () => { timer = setTimeout(start, HOVER_DELAY); });
+      card.addEventListener('mouseleave', stop);
+      return;
+    }
+
+    /* No hover to hang this off, so the touch equivalent is a hold: press
+       and keep still for the same 2.5s and the preview takes over: lift
+       before then and the tap goes through as a tap. The card's own click
+       handler (in departure.js) is what would normally fire on lift, so
+       once the hold has actually triggered a preview, that lift's default
+       is prevented -- otherwise the preview would appear and the page
+       would navigate away in the same breath, one right after the other. */
+    let longPressed = false;
+    let startX = 0;
+    let startY = 0;
+
+    card.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      longPressed = false;
+      timer = setTimeout(() => { longPressed = true; start(); }, HOVER_DELAY);
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      if (Math.hypot(t.clientX - startX, t.clientY - startY) < 10) return;
+      clearTimeout(timer);
+      if (longPressed) { stop(); longPressed = false; }
+    }, { passive: true });
+
+    card.addEventListener('touchend', (e) => {
+      clearTimeout(timer);
+      if (!longPressed) return; // a plain tap: let the click through as normal
+      e.preventDefault();
+      stop();
+      longPressed = false;
+    });
+
+    card.addEventListener('touchcancel', () => {
+      clearTimeout(timer);
+      if (longPressed) { stop(); longPressed = false; }
+    });
   });
 }
 
