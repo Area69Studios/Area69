@@ -1,6 +1,8 @@
 /* Synthesised rather than sampled: no files to fetch, nothing to licence,
-   and the timbre is tunable in place. Everything here is low-passed and
-   short — the palette is sub thumps and filtered noise, not beeps. */
+   and the timbre is tunable in place. Everything here is short, clean
+   noise ticks and unresonant sine/triangle tones -- filtered noise for
+   attack, plain fixed or two-note chimes for confirmation, nothing that
+   bends pitch far enough to read as a sci-fi sweep. */
 
 const STORE_KEY = 'a69-sound';
 
@@ -72,8 +74,8 @@ function bus(gain) {
   gain.connect(wet);
 }
 
-function env(node, peak, attack, hold, release) {
-  const t = ctx.currentTime;
+function env(node, peak, attack, hold, release, delay = 0) {
+  const t = ctx.currentTime + delay;
   node.gain.cancelScheduledValues(t);
   node.gain.setValueAtTime(0.0001, t);
   node.gain.exponentialRampToValueAtTime(peak, t + attack);
@@ -82,10 +84,12 @@ function env(node, peak, attack, hold, release) {
   return t + attack + hold + release;
 }
 
-function tone({ type = 'sine', from, to, peak, attack, hold, release, cutoff = 900, q = 1 }) {
+// delay lets a voice place a second or third note a beat after the first,
+// which is what turns a single tone into a short chime rather than a chord
+function tone({ type = 'sine', from, to, peak, attack, hold, release, cutoff = 900, q = 1, delay = 0 }) {
   const osc = ctx.createOscillator();
   osc.type = type;
-  const t = ctx.currentTime;
+  const t = ctx.currentTime + delay;
   osc.frequency.setValueAtTime(from, t);
   if (to !== undefined) osc.frequency.exponentialRampToValueAtTime(to, t + attack + hold + release);
 
@@ -95,65 +99,74 @@ function tone({ type = 'sine', from, to, peak, attack, hold, release, cutoff = 9
   filter.Q.value = q;
 
   const g = ctx.createGain();
-  const end = env(g, peak, attack, hold, release);
+  const end = env(g, peak, attack, hold, release, delay);
 
   osc.connect(filter); filter.connect(g); bus(g);
   osc.start(t);
   osc.stop(end + 0.05);
 }
 
-function hiss({ peak, attack, hold, release, cutoff, q = 1, type = 'bandpass', sweepTo }) {
+function hiss({ peak, attack, hold, release, cutoff, q = 1, type = 'bandpass', sweepTo, delay = 0 }) {
   const src = ctx.createBufferSource();
   src.buffer = noiseBuf;
   src.loop = true;
 
   const filter = ctx.createBiquadFilter();
   filter.type = type;
-  const t = ctx.currentTime;
+  const t = ctx.currentTime + delay;
   filter.frequency.setValueAtTime(cutoff, t);
   if (sweepTo) filter.frequency.exponentialRampToValueAtTime(sweepTo, t + attack + hold + release);
   filter.Q.value = q;
 
   const g = ctx.createGain();
-  const end = env(g, peak, attack, hold, release);
+  const end = env(g, peak, attack, hold, release, delay);
 
   src.connect(filter); filter.connect(g); bus(g);
   src.start(t);
   src.stop(end + 0.05);
 }
 
+/* Redesigned around three rules that the previous palette broke:
+   no filter Q above ~1 (that resonance is what read as a cheap synth
+   "boing"), no oscillator sweeping more than a few dozen Hz (a fast wide
+   sweep is a sci-fi laser, not a UI tick), and anything confirmatory is a
+   short two-note chime at a clean interval -- a fourth or fifth -- rather
+   than one tone bending. Ticks lean on filtered noise for their attack,
+   the way a real key or shutter does, with a fixed-pitch triangle under it
+   for body instead of a moving sine. */
 const voices = {
-  /* Subordinate to the click, not inaudible. Measured against silence the
-     first pass came out at 0.0002 RMS — the bandpass takes most of the
-     noise's energy, so the level has to be set after the filter, not before. */
+  // barely there: a soft high tick, no tone bend
   hover() {
-    hiss({ peak: 0.22, attack: 0.004, hold: 0.006, release: 0.075, cutoff: 1500, q: 1.4 });
-    tone({ from: 300, to: 210, peak: 0.1, attack: 0.004, hold: 0.006, release: 0.085, cutoff: 760 });
+    hiss({ peak: 0.16, attack: 0.002, hold: 0.003, release: 0.045, cutoff: 3000, q: 1, type: 'highpass' });
+    tone({ type: 'triangle', from: 780, peak: 0.05, attack: 0.002, hold: 0.004, release: 0.05, cutoff: 1500, q: 0.7 });
   },
 
-  // a body hit: sub drop under a short filtered transient
+  // a clean tap: a tight noise attack over a fixed, unbent low body
   click() {
-    tone({ from: 150, to: 44, peak: 0.42, attack: 0.003, hold: 0.012, release: 0.16, cutoff: 420, q: 3 });
-    hiss({ peak: 0.1, attack: 0.002, hold: 0.006, release: 0.1, cutoff: 2600, sweepTo: 700, q: 0.9 });
+    hiss({ peak: 0.18, attack: 0.001, hold: 0.004, release: 0.05, cutoff: 3400, q: 1, type: 'highpass' });
+    tone({ type: 'triangle', from: 220, peak: 0.28, attack: 0.002, hold: 0.01, release: 0.1, cutoff: 480, q: 0.9 });
   },
 
-  // longer and lower: a room changing rather than a control responding
+  // a soft two-note pad, a fifth apart -- a room settling, not a machine
   section() {
-    tone({ from: 38, to: 82, peak: 0.34, attack: 0.09, hold: 0.06, release: 0.5, cutoff: 260, q: 2.4 });
-    hiss({ peak: 0.055, attack: 0.16, hold: 0.04, release: 0.44, cutoff: 260, sweepTo: 1500, q: 0.7 });
+    tone({ type: 'sine', from: 220, peak: 0.16, attack: 0.12, hold: 0.05, release: 0.5, cutoff: 500, q: 0.8 });
+    tone({ type: 'sine', from: 330, peak: 0.11, attack: 0.14, hold: 0.05, release: 0.55, cutoff: 700, q: 0.8, delay: 0.03 });
+    hiss({ peak: 0.04, attack: 0.18, hold: 0.04, release: 0.4, cutoff: 1400, q: 0.6, type: 'bandpass' });
   },
 
-  // the site arriving
+  // the site arriving: an ascending chime, G4 to D5, with a breath of air
   reveal() {
-    tone({ from: 110, to: 34, peak: 0.5, attack: 0.006, hold: 0.03, release: 0.75, cutoff: 340, q: 2.2 });
-    hiss({ peak: 0.09, attack: 0.02, hold: 0.05, release: 0.7, cutoff: 1800, sweepTo: 300, q: 0.8 });
+    tone({ type: 'sine', from: 392, peak: 0.24, attack: 0.01, hold: 0.05, release: 0.55, cutoff: 1000, q: 0.8 });
+    tone({ type: 'sine', from: 587, peak: 0.2, attack: 0.01, hold: 0.06, release: 0.65, cutoff: 1300, q: 0.8, delay: 0.09 });
+    hiss({ peak: 0.045, attack: 0.04, hold: 0.05, release: 0.6, cutoff: 2400, q: 0.6, type: 'bandpass' });
   },
 
-  // a gate opening: everything else here falls, this is the one voice
-  // that climbs, so leaving the card reads differently from arriving on it
+  // a gate opening: a gentle rising swoosh, narrower and quieter at the
+  // top than the old sweep, closing on an A4-E5 confirm chime
   transition() {
-    tone({ from: 220, to: 660, peak: 0.34, attack: 0.05, hold: 0.04, release: 0.3, cutoff: 2000, q: 1.6 });
-    hiss({ peak: 0.13, attack: 0.08, hold: 0.05, release: 0.34, cutoff: 400, sweepTo: 3200, q: 0.8 });
+    hiss({ peak: 0.09, attack: 0.08, hold: 0.04, release: 0.26, cutoff: 500, sweepTo: 1300, q: 0.9 });
+    tone({ type: 'sine', from: 440, peak: 0.22, attack: 0.01, hold: 0.04, release: 0.22, cutoff: 1200, q: 0.8, delay: 0.09 });
+    tone({ type: 'sine', from: 659, peak: 0.19, attack: 0.01, hold: 0.05, release: 0.3, cutoff: 1400, q: 0.8, delay: 0.15 });
   },
 };
 
