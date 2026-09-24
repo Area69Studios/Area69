@@ -282,6 +282,57 @@ function initThumbFallbacks() {
   });
 }
 
+/* A silent preview that only starts once someone actually pauses on a
+   card, not while scrolling past it. The id comes off the "Ver en
+   YouTube" link already on every card, so no markup has to carry it
+   twice. Destroying the iframe on mouseleave (rather than pausing it)
+   is what guarantees the audio and the network request actually stop. */
+function initVideoPreviews() {
+  if (window.matchMedia('(hover: none)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const HOVER_DELAY = 5000;
+  const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
+
+  document.querySelectorAll('.work-card').forEach((card) => {
+    const link = card.querySelector('.work-link');
+    const media = card.querySelector('.work-media');
+    const match = link && ID_RE.exec(link.href);
+    if (!match || !media) return;
+    const id = match[1];
+
+    let timer = null;
+    let wrap = null;
+
+    const stop = () => {
+      clearTimeout(timer);
+      timer = null;
+      if (wrap) { wrap.remove(); wrap = null; }
+    };
+
+    const start = () => {
+      // the source is 16:9 and the card is 3:4; sized and centred like this
+      // it covers the card the same way object-fit: cover crops the still
+      const h = card.getBoundingClientRect().height;
+      wrap = document.createElement('div');
+      wrap.className = 'work-video';
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}&rel=0&iv_load_policy=3`;
+      iframe.title = '';
+      iframe.tabIndex = -1;
+      iframe.setAttribute('allow', 'autoplay; encrypted-media');
+      iframe.style.width = `${h * (16 / 9)}px`;
+      iframe.style.height = `${h}px`;
+      wrap.appendChild(iframe);
+      media.appendChild(wrap);
+      requestAnimationFrame(() => wrap.classList.add('is-active'));
+    };
+
+    card.addEventListener('mouseenter', () => { timer = setTimeout(start, HOVER_DELAY); });
+    card.addEventListener('mouseleave', stop);
+  });
+}
+
 function initEventDetails() {
   document.querySelectorAll('.event-link[aria-controls]').forEach((btn) => {
     const note = document.getElementById(btn.getAttribute('aria-controls'));
@@ -326,6 +377,7 @@ async function boot() {
   initCounters();
   eventsReveal();
   initThumbFallbacks();
+  initVideoPreviews();
   initEventDetails();
   initContactForm();
   initScrollProgress();

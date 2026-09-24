@@ -1018,6 +1018,31 @@ textarea {
   transition: filter 0.6s var(--ease);
 }
 
+/* Live preview, inserted after the img so it paints above it. Sized and
+   centred in JS rather than with object-fit: cover, which iframes cannot
+   be relied on to honour. pointer-events stays off so the cursor never
+   actually leaves .work-card while it sits over the playing video. */
+.work-video {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease);
+}
+
+.work-video.is-active {
+  opacity: 1;
+}
+
+.work-video iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 0;
+}
+
 .work-media::after {
   content: "";
   position: absolute;
