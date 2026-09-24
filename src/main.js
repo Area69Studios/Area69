@@ -291,7 +291,7 @@ function initVideoPreviews() {
   if (window.matchMedia('(hover: none)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const HOVER_DELAY = 5000;
+  const HOVER_DELAY = 2500;
   const ID_RE = /(?:youtu\.be\/|[?&]v=)([\w-]{11})/;
 
   document.querySelectorAll('.work-card').forEach((card) => {
