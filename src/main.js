@@ -394,6 +394,10 @@ function initVideoPreviews() {
        once the hold has actually triggered a preview, that lift's default
        is prevented -- otherwise the preview would appear and the page
        would navigate away in the same breath, one right after the other. */
+    // some browsers (Android Chrome among them) raise this for a held
+    // link regardless of -webkit-touch-callout, which is Safari-only
+    card.addEventListener('contextmenu', (e) => e.preventDefault());
+
     let longPressed = false;
     let startX = 0;
     let startY = 0;

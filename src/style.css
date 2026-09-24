@@ -1177,6 +1177,13 @@ textarea {
   justify-content: space-between;
   flex-shrink: 0;
   transition: border-color 0.4s ease, transform 0.4s ease;
+  /* the card is a link, and on a touch browser holding a link is the
+     system gesture for "copy link / open in new tab" -- without this it
+     fires before the 2.5s hold below ever gets a chance to run */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 /* Cover art: matte black + red duotone at rest, full colour on hover.
