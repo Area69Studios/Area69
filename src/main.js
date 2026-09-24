@@ -15,6 +15,7 @@ import { initCounters } from './lib/counters.js';
 import { initScrollProgress, initMagneticButtons, initCardGlow, initOutlineFill } from './lib/modern.js';
 import { initSound, play } from './lib/sound.js';
 import { initContactForm } from './lib/contact.js';
+import { initDepartureTransition } from './lib/departure.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -378,6 +379,7 @@ async function boot() {
   eventsReveal();
   initThumbFallbacks();
   initVideoPreviews();
+  initDepartureTransition();
   initEventDetails();
   initContactForm();
   initScrollProgress();

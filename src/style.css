@@ -187,6 +187,80 @@ textarea {
   }
 }
 
+/* ============ DEPARTURE (salida hacia YouTube) ============ */
+/* Un beat corto, no una segunda pantalla de carga: pointer-events solo se
+   activa junto con is-active, asi que el resto del sitio queda inerte
+   nada mas que durante ese instante. */
+#departure {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: var(--black);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#departure.is-active {
+  pointer-events: auto;
+}
+
+.dep-panel {
+  text-align: center;
+  padding: 0 24px;
+}
+
+.dep-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--grey);
+  opacity: 0;
+}
+
+.dep-line {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4.4vw, 44px);
+  text-transform: uppercase;
+  color: var(--white);
+  opacity: 0;
+}
+
+.dep-title {
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6.4vw, 64px);
+  text-transform: uppercase;
+  color: var(--red);
+  opacity: 0;
+}
+
+.dep-rule {
+  height: 1px;
+  width: min(280px, 55vw);
+  margin: 26px auto 14px;
+  background: rgb(255 255 255 / 0.12);
+  overflow: hidden;
+}
+
+.dep-rule i {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.dep-dest {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--grey);
+  opacity: 0;
+}
+
 /* ============ NAV ============ */
 .nav {
   position: fixed;

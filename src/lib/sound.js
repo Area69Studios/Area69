@@ -148,6 +148,13 @@ const voices = {
     tone({ from: 110, to: 34, peak: 0.5, attack: 0.006, hold: 0.03, release: 0.75, cutoff: 340, q: 2.2 });
     hiss({ peak: 0.09, attack: 0.02, hold: 0.05, release: 0.7, cutoff: 1800, sweepTo: 300, q: 0.8 });
   },
+
+  // a gate opening: everything else here falls, this is the one voice
+  // that climbs, so leaving the card reads differently from arriving on it
+  transition() {
+    tone({ from: 220, to: 660, peak: 0.34, attack: 0.05, hold: 0.04, release: 0.3, cutoff: 2000, q: 1.6 });
+    hiss({ peak: 0.13, attack: 0.08, hold: 0.05, release: 0.34, cutoff: 400, sweepTo: 3200, q: 0.8 });
+  },
 };
 
 export function play(name) {
