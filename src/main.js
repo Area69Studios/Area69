@@ -121,9 +121,18 @@ function servicesReveal() {
   });
 }
 
-function workHorizontalScroll() {
+/* The section scrolls sideways, not down, so a pill nav for it cannot use
+   the site's usual #anchor + lenis.scrollTo(element): that resolves to
+   where a target sits in the vertical flow, and every group here sits at
+   the same vertical spot -- the pin holds the whole section still while
+   the track slides under it. What actually needs to change is how far
+   into the pinned scroll range the page is, so a jump has to convert a
+   group's horizontal offset into the matching page scrollY instead. */
+function workHorizontalScroll(lenis) {
   const section = document.getElementById('proyectos');
   const track = document.querySelector('.work-track');
+  const groups = gsap.utils.toArray('.work-group');
+  const filters = gsap.utils.toArray('.work-filter');
   if (!section || !track) return;
 
   gsap.fromTo(
@@ -142,7 +151,35 @@ function workHorizontalScroll() {
     return Math.max(0, track.scrollWidth - window.innerWidth + 96);
   }
 
-  ScrollTrigger.create({
+  function setActiveFilter(name) {
+    filters.forEach((btn) => {
+      const active = btn.dataset.jump === name;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  // With only six cards, the trailing groups are narrower than the track's
+  // last screenful, so their own offset can land past the maximum the
+  // track ever scrolls to -- there simply isn't enough content after them
+  // to push them flush against the viewport's edge. That means two pills
+  // (say cortos and largos) can resolve to the exact same maxed-out scroll
+  // position, which geometry alone can't tell apart once there. While a
+  // click is actively driving the scroll, the pill it set stands as-is
+  // rather than being re-derived from geometry on every frame of that
+  // scroll -- otherwise an intermediate frame near the same ceiling would
+  // relabel it before the animation even finishes.
+  let jumping = false;
+
+  // Lenis's own tween has no cancel hook: a wheel or touch mid-jump
+  // silently replaces it without ever firing the onComplete below, which
+  // would otherwise leave "jumping" stuck true and the pills frozen on
+  // whatever they last showed. Any real scroll gesture is a clearer signal
+  // than that missing callback, so it hands control back here directly.
+  window.addEventListener('wheel', () => { jumping = false; }, { passive: true });
+  window.addEventListener('touchstart', () => { jumping = false; }, { passive: true });
+
+  const trigger = ScrollTrigger.create({
     trigger: section,
     start: 'top top',
     end: () => '+=' + getScrollDistance(),
@@ -150,8 +187,40 @@ function workHorizontalScroll() {
     scrub: 0.6,
     invalidateOnRefresh: true,
     onUpdate: (self) => {
-      gsap.set(track, { x: -getScrollDistance() * self.progress });
+      const distance = getScrollDistance();
+      gsap.set(track, { x: -distance * self.progress });
+      if (jumping) return;
+
+      if (self.progress >= 0.999) {
+        // nothing left after the last group to push it flush against the
+        // viewport's edge, so at full scroll it's what's on screen
+        // regardless of where its own offset says it "should" land
+        setActiveFilter(groups[groups.length - 1].dataset.group);
+      } else {
+        // otherwise, whichever group's left edge the track has scrolled
+        // past most recently is the one actually under the viewport's
+        // leading edge
+        const x = distance * self.progress;
+        let current = groups[0];
+        for (const group of groups) {
+          if (group.offsetLeft <= x + 40) current = group;
+        }
+        setActiveFilter(current.dataset.group);
+      }
     },
+  });
+
+  filters.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const group = groups.find((g) => g.dataset.group === btn.dataset.jump);
+      if (!group || !lenis) return;
+      jumping = true;
+      setActiveFilter(btn.dataset.jump);
+      const distance = getScrollDistance();
+      const progress = distance > 0 ? Math.min(1, group.offsetLeft / distance) : 0;
+      const y = trigger.start + progress * (trigger.end - trigger.start);
+      lenis.scrollTo(y, { duration: 1.2, onComplete: () => { jumping = false; } });
+    });
   });
 }
 
@@ -503,12 +572,12 @@ async function boot() {
   const loading = runPreloader();
 
   initSound();
-  initSmoothScroll();
+  const lenis = initSmoothScroll();
   initHeroFluid();
   initNav();
   manifestoScrollytelling();
   servicesReveal();
-  workHorizontalScroll();
+  workHorizontalScroll(lenis);
   initCounters();
   eventsReveal();
   initThumbFallbacks();
