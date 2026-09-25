@@ -1520,31 +1520,48 @@ textarea {
   transform: scale(1.08);
 }
 
-.work-mute i {
+/* Muted (the default) shows the speaker glyph; unmuted swaps it for the
+   animated bars, so the button reads as "tap for sound" at rest instead
+   of as a flattened, illegible version of the meter. */
+.work-mute-icon {
+  width: 15px;
+  height: 15px;
+  fill: var(--white);
+}
+
+.work-mute-bars {
+  display: none;
+  align-items: center;
+  gap: 2.5px;
+  height: 13px;
+}
+
+.work-mute:not(.is-off) .work-mute-icon {
+  display: none;
+}
+
+.work-mute:not(.is-off) .work-mute-bars {
+  display: flex;
+}
+
+.work-mute-bars i {
   display: block;
   width: 2px;
-  height: 13px;
-  margin-inline: 1.25px;
+  height: 100%;
   background: var(--red);
   transform-origin: center;
   transform: scaleY(var(--h, 0.4));
-  transition: transform 0.35s var(--ease), background 0.3s ease;
+  transition: transform 0.35s var(--ease);
   animation: meter 1.1s ease-in-out infinite alternate;
 }
 
-.work-mute i:nth-child(1) { --h: 0.35; animation-delay: 0s; }
-.work-mute i:nth-child(2) { --h: 0.85; animation-delay: 0.14s; }
-.work-mute i:nth-child(3) { --h: 0.5; animation-delay: 0.28s; }
-.work-mute i:nth-child(4) { --h: 0.7; animation-delay: 0.42s; }
-
-.work-mute.is-off i {
-  animation: none;
-  transform: scaleY(0.1);
-  background: rgba(255, 255, 255, 0.6);
-}
+.work-mute-bars i:nth-child(1) { --h: 0.35; animation-delay: 0s; }
+.work-mute-bars i:nth-child(2) { --h: 0.85; animation-delay: 0.14s; }
+.work-mute-bars i:nth-child(3) { --h: 0.5; animation-delay: 0.28s; }
+.work-mute-bars i:nth-child(4) { --h: 0.7; animation-delay: 0.42s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .work-mute i { animation: none; }
+  .work-mute-bars i { animation: none; }
 }
 
 .work-card:focus-visible {
