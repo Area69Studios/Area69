@@ -1345,58 +1345,138 @@ textarea {
 .view-compact .work-track {
   display: flex;
   flex-direction: column;
-  gap: 10px;
   width: 100%;
   padding: 0 clamp(20px, 6vw, 48px);
 }
 
-/* Same card element as the other two views, just laid out as a thin
-   row instead of a poster: the big number, the synopsis and the two
-   hover badges only make sense at poster size, so this is the one view
-   that hides them rather than trying to shrink them down. */
+/* An episode list, not a column of shrunken posters: a continuous
+   strip with a hairline between rows instead of each one boxed off
+   and gapped, closer to what a streaming app shows for "more from
+   this show" than to a grid of cards squeezed thin. Same .work-card
+   element as the other two views underneath -- only the shape and the
+   chrome around it change here. */
 .view-compact .work-card {
   width: 100%;
   aspect-ratio: unset;
   flex-direction: row;
   align-items: center;
-  gap: 16px;
-  padding: 10px 16px;
-  height: 72px;
+  gap: 20px;
+  height: auto;
+  padding: 14px 4px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  transition: background 0.25s ease, padding-left 0.3s var(--ease);
+}
+
+.view-compact .work-card:first-child {
+  border-top: 1px solid var(--line);
+}
+
+/* The shared pop (scale + lift + shadow) reads as a glitch on a row
+   this wide and this short -- scaling something nearly the full page
+   width by 7% moves its edges dozens of pixels, not the small, settled
+   lift it is on a poster. A list row asks to be pulled into instead:
+   the background lightens and the whole row nudges right, the same
+   language film and music apps use for "this one's next." */
+.view-compact .work-card:hover,
+.view-compact .work-card:focus-visible {
+  background: var(--black-2);
+  border-color: var(--line);
+  padding-left: 14px;
+  transform: none;
+  box-shadow: none;
+  z-index: auto;
+}
+
+/* 16:9 like the source footage, not a square crop of it -- reads as a
+   film thumbnail rather than an icon, and it's what makes room for the
+   play/watched badge to sit in a corner instead of floating loose. */
+.view-compact .work-media {
+  position: relative;
+  inset: auto;
+  width: 118px;
+  height: 66px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
 }
 
 .view-compact .work-card::after {
   display: none;
 }
 
-.view-compact .work-media {
-  position: relative;
-  inset: auto;
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
 .view-compact .work-num,
-.view-compact .work-yt,
 .view-compact .work-mute,
 .view-compact .work-synopsis,
 .view-compact .work-next {
   display: none;
 }
 
+/* Unlike the other two views, this one keeps the YouTube/check badge
+   rather than hiding it -- it's the only place left that shows watched
+   status at a glance (the progress bar is thin enough to miss in a
+   dense list), so it earns its keep small, docked into the
+   thumbnail's own corner instead of floating above the card. */
+/* .work-yt is a sibling of .work-media, not its child, so it's
+   positioned absolute against the card itself rather than the
+   thumbnail -- top/left here just replicate the thumbnail's own
+   position (row padding: 14px 4px) plus its size (118x66) to land in
+   its bottom-right corner with a 4px inset, the same math the
+   original top: 28px; right: 28px already relies on to match its
+   card's own 28px padding. */
+.view-compact .work-yt {
+  top: 56px;
+  left: 98px;
+  right: auto;
+  bottom: auto;
+  width: 20px;
+  height: 20px;
+  opacity: 0.9;
+}
+
+.view-compact .work-yt svg {
+  width: 10px;
+}
+
 .view-compact .work-info {
+  position: relative;
   flex: 1;
   min-width: 0;
+  padding-right: 28px;
 }
 
 .view-compact .work-card h3 {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .view-compact .work-card p {
-  font-size: 11px;
+  font-size: 11.5px;
+}
+
+/* The pull: an arrow that was already leaning in, one press away from
+   going. Off to the side at rest so the title has the row to itself. */
+.view-compact .work-info::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%) translateX(-8px);
+  background: var(--red);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.3s var(--ease);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.view-compact .work-card:hover .work-info::after,
+.view-compact .work-card:focus-visible .work-info::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 .work-card {
