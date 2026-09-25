@@ -126,47 +126,50 @@ function hiss({ peak, attack, hold, release, cutoff, q = 1, type = 'bandpass', s
   src.stop(end + 0.05);
 }
 
-/* Redesigned around three rules that the previous palette broke:
-   no filter Q above ~1 (that resonance is what read as a cheap synth
-   "boing"), no oscillator sweeping more than a few dozen Hz (a fast wide
-   sweep is a sci-fi laser, not a UI tick), and anything confirmatory is a
-   short two-note chime at a clean interval -- a fourth or fifth -- rather
-   than one tone bending. Ticks lean on filtered noise for their attack,
-   the way a real key or shutter does, with a fixed-pitch triangle under it
-   for body instead of a moving sine. */
+/* Redesigned a second time to move the whole palette down and away from
+   treble: every oscillator dropped roughly an octave, every lowpass
+   cutoff pulled in to shave off the upper harmonics that used to give
+   these their glassy edge, and the noise attacks switched from highpass
+   (all treble, by definition) to bandpass centred low -- a dull knock
+   instead of a hiss. The earlier rules still hold: no filter Q above ~1,
+   no oscillator sweeping more than a few dozen Hz, confirmatory sounds
+   are a short two-note chime at a clean interval rather than one tone
+   bending. */
 const voices = {
-  // barely there: a soft high tick, no tone bend
+  // barely there: a soft low tick, rounded rather than glassy
   hover() {
-    hiss({ peak: 0.16, attack: 0.002, hold: 0.003, release: 0.045, cutoff: 3000, q: 1, type: 'highpass' });
-    tone({ type: 'triangle', from: 780, peak: 0.05, attack: 0.002, hold: 0.004, release: 0.05, cutoff: 1500, q: 0.7 });
+    hiss({ peak: 0.15, attack: 0.002, hold: 0.003, release: 0.05, cutoff: 1500, q: 0.8, type: 'bandpass' });
+    tone({ type: 'triangle', from: 340, peak: 0.055, attack: 0.002, hold: 0.005, release: 0.06, cutoff: 650, q: 0.7 });
   },
 
-  // a clean tap: a tight noise attack over a fixed, unbent low body
+  // a clean tap: a dull knock over a deep, unbent body
   click() {
-    hiss({ peak: 0.18, attack: 0.001, hold: 0.004, release: 0.05, cutoff: 3400, q: 1, type: 'highpass' });
-    tone({ type: 'triangle', from: 220, peak: 0.28, attack: 0.002, hold: 0.01, release: 0.1, cutoff: 480, q: 0.9 });
+    hiss({ peak: 0.17, attack: 0.001, hold: 0.004, release: 0.055, cutoff: 1900, q: 0.8, type: 'bandpass' });
+    tone({ type: 'triangle', from: 130, peak: 0.32, attack: 0.002, hold: 0.012, release: 0.13, cutoff: 300, q: 0.9 });
   },
 
-  // a soft two-note pad, a fifth apart -- a room settling, not a machine
+  // a soft two-note pad, a fifth apart and an octave down -- a room
+  // settling, not a machine
   section() {
-    tone({ type: 'sine', from: 220, peak: 0.16, attack: 0.12, hold: 0.05, release: 0.5, cutoff: 500, q: 0.8 });
-    tone({ type: 'sine', from: 330, peak: 0.11, attack: 0.14, hold: 0.05, release: 0.55, cutoff: 700, q: 0.8, delay: 0.03 });
-    hiss({ peak: 0.04, attack: 0.18, hold: 0.04, release: 0.4, cutoff: 1400, q: 0.6, type: 'bandpass' });
+    tone({ type: 'sine', from: 147, peak: 0.17, attack: 0.13, hold: 0.05, release: 0.55, cutoff: 340, q: 0.8 });
+    tone({ type: 'sine', from: 220, peak: 0.12, attack: 0.15, hold: 0.05, release: 0.6, cutoff: 480, q: 0.8, delay: 0.03 });
+    hiss({ peak: 0.035, attack: 0.19, hold: 0.04, release: 0.42, cutoff: 850, q: 0.6, type: 'bandpass' });
   },
 
-  // the site arriving: an ascending chime, G4 to D5, with a breath of air
+  // the site arriving: an ascending chime, G3 to D4, warm rather than
+  // glassy at the top
   reveal() {
-    tone({ type: 'sine', from: 392, peak: 0.24, attack: 0.01, hold: 0.05, release: 0.55, cutoff: 1000, q: 0.8 });
-    tone({ type: 'sine', from: 587, peak: 0.2, attack: 0.01, hold: 0.06, release: 0.65, cutoff: 1300, q: 0.8, delay: 0.09 });
-    hiss({ peak: 0.045, attack: 0.04, hold: 0.05, release: 0.6, cutoff: 2400, q: 0.6, type: 'bandpass' });
+    tone({ type: 'sine', from: 196, peak: 0.26, attack: 0.012, hold: 0.06, release: 0.6, cutoff: 520, q: 0.8 });
+    tone({ type: 'sine', from: 294, peak: 0.21, attack: 0.012, hold: 0.07, release: 0.7, cutoff: 650, q: 0.8, delay: 0.1 });
+    hiss({ peak: 0.04, attack: 0.05, hold: 0.05, release: 0.6, cutoff: 1300, q: 0.6, type: 'bandpass' });
   },
 
-  // a gate opening: a gentle rising swoosh, narrower and quieter at the
-  // top than the old sweep, closing on an A4-E5 confirm chime
+  // a gate opening: a low, gentle rising swoosh, closing on an A3-E4
+  // confirm chime -- the same shape as before, an octave lower throughout
   transition() {
-    hiss({ peak: 0.09, attack: 0.08, hold: 0.04, release: 0.26, cutoff: 500, sweepTo: 1300, q: 0.9 });
-    tone({ type: 'sine', from: 440, peak: 0.22, attack: 0.01, hold: 0.04, release: 0.22, cutoff: 1200, q: 0.8, delay: 0.09 });
-    tone({ type: 'sine', from: 659, peak: 0.19, attack: 0.01, hold: 0.05, release: 0.3, cutoff: 1400, q: 0.8, delay: 0.15 });
+    hiss({ peak: 0.08, attack: 0.09, hold: 0.04, release: 0.28, cutoff: 280, sweepTo: 700, q: 0.9, type: 'bandpass' });
+    tone({ type: 'sine', from: 220, peak: 0.23, attack: 0.012, hold: 0.05, release: 0.24, cutoff: 600, q: 0.8, delay: 0.1 });
+    tone({ type: 'sine', from: 330, peak: 0.2, attack: 0.012, hold: 0.06, release: 0.32, cutoff: 700, q: 0.8, delay: 0.17 });
   },
 };
 
