@@ -1479,6 +1479,74 @@ textarea {
   transform: scale(1.08);
 }
 
+/* Already opened this once: the badge stops being a play cue and becomes
+   a status, so it stays in its "hover" look permanently rather than
+   fading back to 0.55 opacity at rest. */
+.work-yt.is-watched {
+  opacity: 1;
+  background: var(--red);
+  border-color: var(--red);
+}
+
+/* Mute toggle for the live preview, stacked under the YT/check badge so
+   it never competes with the title block or the synopsis underneath.
+   Same level-meter language as the header's sound toggle (see
+   .sound-toggle), just smaller and defaulting to off, since the preview
+   can only ever autoplay muted in the first place. */
+.work-mute {
+  position: absolute;
+  top: 70px;
+  right: 28px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 10, 11, 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease), border-color 0.3s ease, transform 0.3s var(--ease);
+}
+
+.work-mute.is-active {
+  opacity: 1;
+}
+
+.work-mute:hover {
+  border-color: var(--red);
+  transform: scale(1.08);
+}
+
+.work-mute i {
+  display: block;
+  width: 2px;
+  height: 13px;
+  margin-inline: 1.25px;
+  background: var(--red);
+  transform-origin: center;
+  transform: scaleY(var(--h, 0.4));
+  transition: transform 0.35s var(--ease), background 0.3s ease;
+  animation: meter 1.1s ease-in-out infinite alternate;
+}
+
+.work-mute i:nth-child(1) { --h: 0.35; animation-delay: 0s; }
+.work-mute i:nth-child(2) { --h: 0.85; animation-delay: 0.14s; }
+.work-mute i:nth-child(3) { --h: 0.5; animation-delay: 0.28s; }
+.work-mute i:nth-child(4) { --h: 0.7; animation-delay: 0.42s; }
+
+.work-mute.is-off i {
+  animation: none;
+  transform: scaleY(0.1);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-mute i { animation: none; }
+}
+
 .work-card:focus-visible {
   outline: 2px solid var(--white);
   outline-offset: 3px;

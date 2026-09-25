@@ -424,6 +424,7 @@ function initVideoPreviews() {
 
     let timer = null;
     let wrap = null;
+    let muteBtn = null;
 
     const stop = () => {
       clearTimeout(timer);
@@ -433,6 +434,10 @@ function initVideoPreviews() {
         if (iframe?.contentWindow) players.delete(iframe.contentWindow);
         wrap.remove();
         wrap = null;
+      }
+      if (muteBtn) {
+        muteBtn.remove();
+        muteBtn = null;
       }
       progress?.classList.remove('is-active');
       // clears the live-playback override, not the width itself -- if the
@@ -455,8 +460,45 @@ function initVideoPreviews() {
       iframe.style.width = `${h * (16 / 9)}px`;
       iframe.style.height = `${h}px`;
       wrap.appendChild(iframe);
+
       media.appendChild(wrap);
       requestAnimationFrame(() => wrap.classList.add('is-active'));
+
+      // the preview autoplays muted -- browsers require that to autoplay
+      // at all -- so this is what lets someone actually hear it without
+      // leaving the card. It's a sibling of .work-media, not nested
+      // inside it: .work-media is its own stacking context, so anything
+      // inside it -- however high its own z-index -- still sits, as a
+      // whole, below every other direct child of the card (.work-num
+      // among them, which stretches to the card's full width under the
+      // card's own flex layout and would otherwise catch the click first).
+      // .work-video turns pointer-events off on itself so the cursor
+      // stays "inside" the card while the preview plays; this button
+      // opts back in, and both stopPropagation and preventDefault matter
+      // on the click, since without them it would bubble to the card's
+      // own link and navigate to YouTube instead of just toggling sound.
+      muteBtn = document.createElement('button');
+      muteBtn.type = 'button';
+      muteBtn.className = 'work-mute is-off';
+      muteBtn.tabIndex = -1;
+      muteBtn.setAttribute('aria-pressed', 'false');
+      muteBtn.setAttribute('aria-label', 'Activar sonido de la vista previa');
+      muteBtn.innerHTML = '<i></i><i></i><i></i><i></i>';
+      let muted = true;
+      muteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        muted = !muted;
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func: muted ? 'mute' : 'unMute', args: [] }),
+          'https://www.youtube.com'
+        );
+        muteBtn.classList.toggle('is-off', muted);
+        muteBtn.setAttribute('aria-pressed', String(!muted));
+        muteBtn.setAttribute('aria-label', muted ? 'Activar sonido de la vista previa' : 'Silenciar la vista previa');
+      });
+      card.appendChild(muteBtn);
+      requestAnimationFrame(() => muteBtn.classList.add('is-active'));
 
       if (bar) {
         progress.classList.add('is-active');
@@ -529,11 +571,22 @@ function initVideoPreviews() {
    it is not motion and it costs no data, so it runs regardless of
    reduced-motion or Data Saver. CSS does the actual fill (.is-watched i);
    this only ever adds the class. */
+// the YouTube mark is what a card shows by default -- once it's been
+// opened, the corner badge swaps to a plain check, in the same red it
+// already goes on hover, and stays that way regardless of hover state
+const CHECK_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+
 function initWatchedBars() {
   document.querySelectorAll('.work-card').forEach((card) => {
     const match = ID_RE.exec(card.href);
-    const bar = card.querySelector('.work-progress');
-    if (match && bar && isWatched(match[1])) bar.classList.add('is-watched');
+    if (!match || !isWatched(match[1])) return;
+    card.querySelector('.work-progress')?.classList.add('is-watched');
+    const badge = card.querySelector('.work-yt');
+    if (badge) {
+      badge.classList.add('is-watched');
+      badge.innerHTML = CHECK_ICON;
+    }
   });
 }
 
