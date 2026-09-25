@@ -1398,6 +1398,53 @@ textarea {
   margin-top: 6px;
 }
 
+/* Netflix-style synopsis, only on the cards that have one. Kept out of
+   .work-info's own flow at rest (max-height 0) so a card without one is
+   unaffected; on hover it grows into the space the pop (scale 1.07)
+   already opens up. Touch has no hover to reveal it on, so there it's
+   shown plainly rather than hidden behind a gesture nothing would ever
+   trigger. */
+.work-synopsis {
+  margin-top: 10px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.45s var(--ease), opacity 0.3s ease;
+}
+
+.work-chapter {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 6px;
+}
+
+.work-synopsis p {
+  color: rgba(255, 255, 255, 0.82);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin-top: 0;
+}
+
+@media (hover: hover) {
+  .work-card:hover .work-synopsis {
+    max-height: 180px;
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .work-synopsis {
+    max-height: 180px;
+    opacity: 1;
+  }
+}
+
 /* The whole card is the link now, so this is a cue, not a control: it
    never needs its own hit target or a visible-on-touch fallback like the
    button it replaced did, because tapping anywhere on the card already
