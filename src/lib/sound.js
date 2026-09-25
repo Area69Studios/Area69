@@ -228,6 +228,23 @@ export function initSound() {
     if (!e.relatedTarget || !e.relatedTarget.closest?.(INTERACTIVE)) lastHover = null;
   });
 
+  /* Same chime, same debounce state as the mouseover above -- keyboard
+     attention landing on a card (Tab, or the arrow-key nav jumping
+     between them) is the same event as a pointer landing on one, just
+     through a different input. Not gated behind (hover: none) the way
+     mouseover is: that guard exists to stop touch's synthetic hover on
+     tap, which doesn't apply here, since focus only ever moves this way
+     from a real keyboard. */
+  document.addEventListener('focusin', (e) => {
+    const el = e.target.closest?.(INTERACTIVE);
+    if (!el || el === lastHover || el.id === 'soundToggle') return;
+    lastHover = el;
+    const now = performance.now();
+    if (now - lastHoverAt < 55) return;
+    lastHoverAt = now;
+    play('hover');
+  });
+
   document.addEventListener('pointerdown', (e) => {
     if (e.target.closest(INTERACTIVE)) play('click');
   });
