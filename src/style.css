@@ -1328,6 +1328,14 @@ textarea {
   display: none;
 }
 
+/* Same reasoning as the synopsis just above: sized for a full poster
+   card, this doesn't fit gracefully once the card shrinks this far
+   down -- it read as cramped against the card's own edge rather than
+   as a real design element. */
+.view-grid .work-next {
+  display: none;
+}
+
 /* A group hidden by the pill filter (grid/compact only -- the carousel
    never hides a card, it scrolls to it instead). */
 .work-card.is-filtered-out {
@@ -1373,7 +1381,8 @@ textarea {
 .view-compact .work-num,
 .view-compact .work-yt,
 .view-compact .work-mute,
-.view-compact .work-synopsis {
+.view-compact .work-synopsis,
+.view-compact .work-next {
   display: none;
 }
 
