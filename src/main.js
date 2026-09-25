@@ -234,24 +234,61 @@ function workHorizontalScroll(lenis) {
   // matches the visual left-to-right order across every group, since the
   // track is just those groups laid out one after another -- so this
   // needs no separate index of its own, only the flattened card list.
-  // Scoped to keydown on a card itself (not the whole window) so it never
-  // competes with the arrow keys' native job anywhere else on the page.
   const cards = gsap.utils.toArray('.work-card');
-  cards.forEach((card, i) => {
-    card.addEventListener('keydown', (e) => {
-      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-      const target = cards[e.key === 'ArrowRight' ? i + 1 : i - 1];
-      if (!target) return;
-      e.preventDefault();
-      target.focus({ preventScroll: true });
-      // jumpTo sets "jumping", which is also what tells onUpdate to leave
-      // the pills alone -- so without this, arrow nav would land on a
-      // card from a different group while the pill row kept showing
-      // whichever one was active before
-      const group = target.closest('.work-group');
-      if (group) setActiveFilter(group.dataset.group);
-      jumpTo(target.offsetLeft, 0.5);
-    });
+
+  // Which card counts as "current" when none is actually focused: the
+  // last one the track has scrolled past, same rule the pill sync above
+  // already uses for groups.
+  function nearestCardIndex() {
+    const distance = getScrollDistance();
+    const x = distance * trigger.progress;
+    let idx = 0;
+    cards.forEach((card, i) => { if (card.offsetLeft <= x + 40) idx = i; });
+    return idx;
+  }
+
+  // Is Proyectos the section actually filling the screen right now? A
+  // plain geometry check rather than ScrollTrigger's own isActive flag,
+  // which turned out to read false right at the very end of the pin's
+  // range -- Lenis's momentum tends to leave the scroll a hair past
+  // trigger.end after a real wheel gesture settles, and that alone was
+  // enough to make isActive false while the section was still visibly
+  // pinned full-screen. The pin holds it at height:100vh for the entire
+  // range it's engaged, boundaries included, so this reads the same
+  // thing more reliably.
+  function proyectosIsPinned() {
+    const rect = section.getBoundingClientRect();
+    return rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
+  }
+
+  // A first attempt scoped this to keydown on each card, which only ever
+  // fires once that card holds real keyboard focus -- and the only way
+  // there is Tab, since clicking a card navigates away immediately rather
+  // than just focusing it. Almost nobody tabs all the way to Proyectos
+  // before reaching for the arrow keys, so in practice it never fired.
+  // This listens on the window instead, gated on the section actually
+  // being pinned on screen -- arriving there by scroll or wheel is
+  // enough on its own. A focused card (from Tab, or from a previous
+  // arrow press) still gets exact card-to-card precision; without one,
+  // the nearest card to the current scroll position stands in.
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const activeTag = document.activeElement?.tagName;
+    if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+    const focusedIndex = cards.indexOf(document.activeElement);
+    if (focusedIndex === -1 && !proyectosIsPinned()) return;
+    const currentIndex = focusedIndex !== -1 ? focusedIndex : nearestCardIndex();
+    const target = cards[e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1];
+    if (!target) return;
+    e.preventDefault();
+    target.focus({ preventScroll: true });
+    // jumpTo sets "jumping", which is also what tells onUpdate to leave
+    // the pills alone -- so without this, arrow nav would land on a card
+    // from a different group while the pill row kept showing whichever
+    // one was active before
+    const group = target.closest('.work-group');
+    if (group) setActiveFilter(group.dataset.group);
+    jumpTo(target.offsetLeft, 0.5);
   });
 }
 
