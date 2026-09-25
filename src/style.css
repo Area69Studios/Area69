@@ -1311,11 +1311,13 @@ textarea {
   transition: opacity 0.6s var(--ease);
 }
 
-.work-card:hover .work-media img {
+.work-card:hover .work-media img,
+.work-card:focus-visible .work-media img {
   filter: none;
 }
 
-.work-card:hover .work-media::after {
+.work-card:hover .work-media::after,
+.work-card:focus-visible .work-media::after {
   opacity: 0;
 }
 
@@ -1340,7 +1342,8 @@ textarea {
   pointer-events: none;
 }
 
-.work-card:hover {
+.work-card:hover,
+.work-card:focus-visible {
   border-color: var(--red);
   transform: translateY(-6px);
 }
@@ -1351,7 +1354,12 @@ textarea {
    -- z-index is what keeps that overlap on top regardless of DOM order,
    and the shadow is what sells it as lifted rather than just bigger.
    Touch has no real hover to leave, so a card can be left mid-pop after
-   a tap with nothing to undo it -- this stays behind (hover: hover). */
+   a tap with nothing to undo it -- hover stays behind (hover: hover).
+   Focus doesn't have that problem: :focus-visible only ever engages from
+   real keyboard navigation (Tab, or the arrow-key jump below calling
+   .focus() from a keydown handler), never from a touch tap or a click,
+   so it gets the pop on every device rather than being gated the same
+   way. */
 @media (hover: hover) {
   .work-card:hover {
     transform: translateY(-6px) scale(1.07);
@@ -1361,7 +1369,15 @@ textarea {
   }
 }
 
-.work-card:hover::before {
+.work-card:focus-visible {
+  transform: translateY(-6px) scale(1.07);
+  z-index: 5;
+  box-shadow: 0 28px 56px -16px rgba(0, 0, 0, 0.65), 0 0 0 1px rgb(226 38 28 / 0.3);
+  transition: border-color 0.4s ease, transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+
+.work-card:hover::before,
+.work-card:focus-visible::before {
   opacity: 1;
 }
 
@@ -1375,7 +1391,8 @@ textarea {
   transition: color 0.4s ease;
 }
 
-.work-card:hover .work-num {
+.work-card:hover .work-num,
+.work-card:focus-visible .work-num {
   color: var(--red);
 }
 
@@ -1455,6 +1472,11 @@ textarea {
   }
 }
 
+.work-card:focus-visible .work-synopsis {
+  max-height: 180px;
+  opacity: 1;
+}
+
 @media (hover: none) {
   .work-synopsis {
     max-height: 180px;
@@ -1489,7 +1511,8 @@ textarea {
   fill: var(--white);
 }
 
-.work-card:hover .work-yt {
+.work-card:hover .work-yt,
+.work-card:focus-visible .work-yt {
   opacity: 1;
   background: var(--red);
   border-color: var(--red);
