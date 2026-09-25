@@ -599,6 +599,29 @@ function initWatchedBars() {
   });
 }
 
+/* The JOHN JOHNSON cards are chapters of one story, not four unrelated
+   uploads -- data-chapter is what says so, since parsing it back out of
+   "Capítulo N" text would tie this to copy that's free to change. Only
+   ever flags ONE card: the earliest chapter nobody's opened yet, and
+   only once at least one earlier one has been -- a visitor who hasn't
+   started the saga gets no nudge, and one who's caught up gets none
+   either, since there's nothing left to point them toward. */
+function initNextChapterCue() {
+  const chapters = [...document.querySelectorAll('.work-card[data-chapter]')]
+    .sort((a, b) => Number(a.dataset.chapter) - Number(b.dataset.chapter))
+    .map((card) => ({ card, id: ID_RE.exec(card.href)?.[1] }))
+    .filter((c) => c.id);
+
+  const anyWatched = chapters.some((c) => isWatched(c.id));
+  const next = anyWatched && chapters.find((c) => !isWatched(c.id));
+  if (!next) return;
+
+  const tag = document.createElement('span');
+  tag.className = 'work-next';
+  tag.textContent = 'Sigue la historia';
+  next.card.querySelector('.work-info')?.prepend(tag);
+}
+
 function initEventDetails() {
   document.querySelectorAll('.event-link[aria-controls]').forEach((btn) => {
     const note = document.getElementById(btn.getAttribute('aria-controls'));
@@ -645,6 +668,7 @@ async function boot() {
   initThumbFallbacks();
   initVideoPreviews();
   initWatchedBars();
+  initNextChapterCue();
   initDepartureTransition();
   initEventDetails();
   initContactForm();

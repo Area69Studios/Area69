@@ -1422,6 +1422,23 @@ textarea {
   margin-bottom: 6px;
 }
 
+/* The one nudge toward "next episode": unlike the synopsis, this is a
+   discovery aid, not a detail you lean in for, so it stays visible at
+   rest on every device rather than waiting on a hover nothing guarantees
+   on touch. */
+.work-next {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--red);
+  padding: 4px 9px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
 .work-synopsis p {
   color: rgba(255, 255, 255, 0.82);
   text-transform: none;
