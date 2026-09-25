@@ -307,37 +307,76 @@ function workHorizontalScroll(lenis) {
     return rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
   }
 
+  // Is any part of Proyectos actually on screen right now? Grid and
+  // compact scroll like a normal page rather than filling it edge to
+  // edge the way the pin does, so "is it pinned" (used for carousel
+  // below) isn't the right question there -- this is the same gate,
+  // loosened to "in the viewport at all" for the two views where the
+  // section is just a normal part of the page flow.
+  function proyectosIsVisible() {
+    const rect = section.getBoundingClientRect();
+    return rect.top < window.innerHeight && rect.bottom > 0;
+  }
+
   // A first attempt scoped this to keydown on each card, which only ever
   // fires once that card holds real keyboard focus -- and the only way
   // there is Tab, since clicking a card navigates away immediately rather
   // than just focusing it. Almost nobody tabs all the way to Proyectos
   // before reaching for the arrow keys, so in practice it never fired.
   // This listens on the window instead, gated on the section actually
-  // being pinned on screen -- arriving there by scroll or wheel is
-  // enough on its own. A focused card (from Tab, or from a previous
-  // arrow press) still gets exact card-to-card precision; without one,
-  // the nearest card to the current scroll position stands in.
+  // being on screen -- arriving there by scroll or wheel is enough on
+  // its own. A focused card (from Tab, or from a previous arrow press)
+  // still gets exact card-to-card precision; without one, the nearest
+  // card to the current scroll position stands in.
   window.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    // nothing to jump along in grid/compact -- there's no horizontal
-    // track there, just a normal page the browser already scrolls
-    if (currentView !== 'carousel') return;
     const activeTag = document.activeElement?.tagName;
     if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
-    const focusedIndex = cards.indexOf(document.activeElement);
-    if (focusedIndex === -1 && !proyectosIsPinned()) return;
-    const currentIndex = focusedIndex !== -1 ? focusedIndex : nearestCardIndex();
-    const target = cards[e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1];
+
+    if (currentView === 'carousel') {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const focusedIndex = cards.indexOf(document.activeElement);
+      if (focusedIndex === -1 && !proyectosIsPinned()) return;
+      const currentIndex = focusedIndex !== -1 ? focusedIndex : nearestCardIndex();
+      const target = cards[e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1];
+      if (!target) return;
+      e.preventDefault();
+      target.focus({ preventScroll: true });
+      // jumpTo sets "jumping", which is also what tells onUpdate to
+      // leave the pills alone -- so without this, arrow nav could land
+      // on a card from a different group while the pill row kept
+      // showing whichever one was active before
+      const group = target.closest('.work-group');
+      if (group) setActiveFilter(group.dataset.group);
+      jumpTo(target.offsetLeft, 0.5);
+      return;
+    }
+
+    // Grid reads left-to-right, top-to-bottom -- the same order the
+    // horizontal keys already walk in DOM order, one row at a time as
+    // they wrap. Compact is a single vertical column, so the vertical
+    // keys answer to it too, alongside the horizontal ones for anyone
+    // who reaches for those out of habit. Neither view has a pin or a
+    // track to move: the browser's own scroll already follows a
+    // focused element, so this only has to move the focus.
+    const forward = currentView === 'compact'
+      ? ['ArrowRight', 'ArrowDown'].includes(e.key)
+      : e.key === 'ArrowRight';
+    const backward = currentView === 'compact'
+      ? ['ArrowLeft', 'ArrowUp'].includes(e.key)
+      : e.key === 'ArrowLeft';
+    if (!forward && !backward) return;
+
+    // pill filters (grid/compact only) hide cards rather than scroll to
+    // them, so a hidden card is never a valid stop along the way
+    const visibleCards = cards.filter((c) => !c.classList.contains('is-filtered-out'));
+    const focusedIndex = visibleCards.indexOf(document.activeElement);
+    if (focusedIndex === -1 && !proyectosIsVisible()) return;
+    const currentIndex = focusedIndex !== -1 ? focusedIndex : 0;
+    const target = visibleCards[forward ? currentIndex + 1 : currentIndex - 1];
     if (!target) return;
     e.preventDefault();
     target.focus({ preventScroll: true });
-    // jumpTo sets "jumping", which is also what tells onUpdate to leave
-    // the pills alone -- so without this, arrow nav would land on a card
-    // from a different group while the pill row kept showing whichever
-    // one was active before
-    const group = target.closest('.work-group');
-    if (group) setActiveFilter(group.dataset.group);
-    jumpTo(target.offsetLeft, 0.5);
+    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
   // Switching view: carousel pins the section and lays the track out as
