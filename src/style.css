@@ -1604,9 +1604,14 @@ textarea {
   .work-mute-bars i { animation: none; }
 }
 
+/* The pop above (red border, scale, shadow) is already a clearer focus
+   signal than a plain outline, and a lot louder -- keeping the browser's
+   own ring on top of it just doubled up as two competing borders round
+   the same card. This drops it rather than leaving the default in its
+   place, since the default is its own outline color that wouldn't match
+   anything and would bring the same problem right back. */
 .work-card:focus-visible {
-  outline: 2px solid var(--white);
-  outline-offset: 3px;
+  outline: none;
 }
 
 /* Netflix-style watch bar. Two different things fill it and neither is a
