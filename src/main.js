@@ -391,6 +391,17 @@ function workHorizontalScroll(lenis) {
       // always-current window.scrollY instead and handing Lenis that
       // plain number skips its own resolution step entirely.
       if (lenis) {
+        // Lenis caches its own max-scroll limit and only recalculates it
+        // on a (debounced) resize observer -- not synchronously the
+        // instant enable()/disable() just changed the document's height
+        // by re-pinning or un-pinning the section above. Landing here
+        // right after the very first enable() this session (nothing had
+        // forced a recalculation before that point) it can still be
+        // holding yesterday's shorter limit, silently clamping the
+        // target below down to wherever that stale limit sits -- often
+        // 0, which reads as "jumped to the hero" even though the
+        // requested target was correct.
+        lenis.resize();
         const y = section.getBoundingClientRect().top + window.scrollY;
         lenis.scrollTo(y, { duration: 0.8 });
       }
