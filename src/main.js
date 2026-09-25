@@ -411,7 +411,19 @@ function workHorizontalScroll(lenis) {
         // requested target was correct.
         lenis.resize();
         const y = section.getBoundingClientRect().top + window.scrollY;
-        lenis.scrollTo(y, { duration: 0.8 });
+        // Re-enabling the pin has its own side effect: ScrollTrigger's
+        // refresh(), a few lines up inside applyView(), nudges the raw
+        // scroll position on its own to keep the pinned animation's
+        // progress consistent with whatever it was mid-refresh -- an
+        // instant, unanimated jump measured (via sampling scrollY every
+        // 30ms through the whole switch) landing hundreds of pixels
+        // above this section, into Manifiesto. An animated scrollTo
+        // starting from there just turned that jump into a visible
+        // climb back down, so the fix isn't a smoother animation, it's
+        // no animation: jumping straight to the correct target the same
+        // way GSAP's own correction did erases the wrong one instead of
+        // visibly recovering from it.
+        lenis.scrollTo(y, { immediate: true });
       }
     });
   });
