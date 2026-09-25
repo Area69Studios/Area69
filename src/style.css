@@ -1117,11 +1117,19 @@ textarea {
   margin-bottom: 40px;
 }
 
+.work-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 26px;
+}
+
 .work-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 26px;
 }
 
 .work-filter {
@@ -1147,6 +1155,54 @@ textarea {
   color: var(--white);
   background: var(--red);
   border-color: var(--red);
+}
+
+/* Carrusel (el pin horizontal de siempre), cuadrícula (las seis
+   tarjetas juntas, scroll vertical normal) o compacta (una lista
+   densa, solo miniatura y título) -- ver workHorizontalScroll en
+   main.js para qué hace cada botón por dentro. */
+.work-views {
+  display: flex;
+  gap: 8px;
+}
+
+.work-view {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--grey);
+  cursor: pointer;
+  transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+
+.work-view svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.work-view:hover {
+  color: var(--white);
+  border-color: var(--grey);
+}
+
+.work-view.is-active {
+  color: var(--white);
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.work-view:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
 }
 
 .work-viewport {
@@ -1193,6 +1249,113 @@ textarea {
 .work-group-cards {
   display: flex;
   gap: 24px;
+}
+
+/* ============ VISTAS ALTERNATIVAS (cuadrícula / compacta) ============
+   The carousel needs the pin to fill the screen; the other two just
+   flow down the page like any other section, so both drop the 100vh
+   lock and the horizontal clip. Neither touches the DOM: .work-group
+   and .work-group-cards go display: contents so their cards join
+   .work-track's own grid/column directly, in the same document order
+   -- nothing to duplicate or keep in sync between views. */
+#proyectos.view-grid,
+#proyectos.view-compact {
+  height: auto;
+  min-height: 0;
+  justify-content: flex-start;
+  padding-block: 120px 80px;
+}
+
+.view-grid .work-viewport,
+.view-compact .work-viewport {
+  overflow: visible;
+  padding-block: 0;
+}
+
+.view-grid .work-group,
+.view-grid .work-group-cards,
+.view-compact .work-group,
+.view-compact .work-group-cards {
+  display: contents;
+}
+
+.view-grid .work-group-title,
+.view-compact .work-group-title {
+  display: none;
+}
+
+.view-grid .work-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  width: 100%;
+  padding: 0 clamp(20px, 6vw, 48px);
+}
+
+.view-grid .work-card {
+  width: 100%;
+}
+
+/* A group hidden by the pill filter (grid/compact only -- the carousel
+   never hides a card, it scrolls to it instead). */
+.work-card.is-filtered-out {
+  display: none;
+}
+
+.view-compact .work-track {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 0 clamp(20px, 6vw, 48px);
+}
+
+/* Same card element as the other two views, just laid out as a thin
+   row instead of a poster: the big number, the synopsis and the two
+   hover badges only make sense at poster size, so this is the one view
+   that hides them rather than trying to shrink them down. */
+.view-compact .work-card {
+  width: 100%;
+  aspect-ratio: unset;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  height: 72px;
+}
+
+.view-compact .work-card::after {
+  display: none;
+}
+
+.view-compact .work-media {
+  position: relative;
+  inset: auto;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-compact .work-num,
+.view-compact .work-yt,
+.view-compact .work-mute,
+.view-compact .work-synopsis {
+  display: none;
+}
+
+.view-compact .work-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.view-compact .work-card h3 {
+  font-size: 16px;
+}
+
+.view-compact .work-card p {
+  font-size: 11px;
 }
 
 .work-card {

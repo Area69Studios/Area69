@@ -17,6 +17,7 @@ import { initSound, play } from './lib/sound.js';
 import { initContactForm } from './lib/contact.js';
 import { initDepartureTransition } from './lib/departure.js';
 import { isWatched } from './lib/watched.js';
+import { readViewPref, writeViewPref } from './lib/view-pref.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -133,6 +134,8 @@ function workHorizontalScroll(lenis) {
   const track = document.querySelector('.work-track');
   const groups = gsap.utils.toArray('.work-group');
   const filters = gsap.utils.toArray('.work-filter');
+  const viewButtons = gsap.utils.toArray('.work-view');
+  const cards = gsap.utils.toArray('.work-card');
   if (!section || !track) return;
 
   gsap.fromTo(
@@ -158,6 +161,32 @@ function workHorizontalScroll(lenis) {
       btn.setAttribute('aria-pressed', String(active));
     });
   }
+
+  // The pills mean two different things depending on the view: in the
+  // carousel there's nothing to hide, every card is already reachable by
+  // scrolling, so a click jumps to it instead. In grid/compact all six
+  // sit on screen together, so there a click actually filters -- and
+  // clicking the same pill again clears back to showing all of them,
+  // since there's no separate "todas" pill to do that job instead.
+  function applyCategoryFilter(name) {
+    cards.forEach((card) => {
+      const inGroup = card.closest('.work-group')?.dataset.group === name;
+      card.classList.toggle('is-filtered-out', !inGroup);
+    });
+    setActiveFilter(name);
+  }
+
+  // Only clears which cards are hidden -- NOT the active pill. Carousel
+  // mode calls this too (switching view has to drop any filter grid/
+  // compact left behind, or cards would stay hidden once back in the
+  // track), but there the active pill means "currently scrolled to",
+  // which has nothing to do with filtering and shouldn't be blanked out
+  // just because a filter reset happened alongside it.
+  function clearCategoryFilter() {
+    cards.forEach((card) => card.classList.remove('is-filtered-out'));
+  }
+
+  let currentView = 'carousel';
 
   // With only six cards, the trailing groups are narrower than the track's
   // last screenful, so their own offset can land past the maximum the
@@ -223,6 +252,17 @@ function workHorizontalScroll(lenis) {
 
   filters.forEach((btn) => {
     btn.addEventListener('click', () => {
+      if (currentView !== 'carousel') {
+        // clicking the pill that's already filtering clears it, since
+        // there's no separate "todas" pill to do that job
+        if (btn.classList.contains('is-active')) {
+          clearCategoryFilter();
+          setActiveFilter(null);
+        } else {
+          applyCategoryFilter(btn.dataset.jump);
+        }
+        return;
+      }
       const group = groups.find((g) => g.dataset.group === btn.dataset.jump);
       if (!group) return;
       setActiveFilter(btn.dataset.jump);
@@ -234,7 +274,6 @@ function workHorizontalScroll(lenis) {
   // matches the visual left-to-right order across every group, since the
   // track is just those groups laid out one after another -- so this
   // needs no separate index of its own, only the flattened card list.
-  const cards = gsap.utils.toArray('.work-card');
 
   // Which card counts as "current" when none is actually focused: the
   // last one the track has scrolled past, same rule the pill sync above
@@ -273,6 +312,9 @@ function workHorizontalScroll(lenis) {
   // the nearest card to the current scroll position stands in.
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    // nothing to jump along in grid/compact -- there's no horizontal
+    // track there, just a normal page the browser already scrolls
+    if (currentView !== 'carousel') return;
     const activeTag = document.activeElement?.tagName;
     if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
     const focusedIndex = cards.indexOf(document.activeElement);
@@ -290,6 +332,52 @@ function workHorizontalScroll(lenis) {
     if (group) setActiveFilter(group.dataset.group);
     jumpTo(target.offsetLeft, 0.5);
   });
+
+  // Switching view: carousel pins the section and lays the track out as
+  // one long row; grid/compact are just a normal flowing page, so the
+  // pin has to actually come off rather than sit there disabled-looking
+  // -- ScrollTrigger's own enable/disable is what does that cleanly,
+  // pin-spacer and all, without needing to rebuild the trigger each time.
+  // refresh() afterward is for every OTHER scroll-triggered animation on
+  // the page below this one: un-pinning changes the whole document's
+  // height, so their trigger positions need recalculating too, not just
+  // this one's.
+  function applyView(view) {
+    currentView = view;
+    section.classList.remove('view-carousel', 'view-grid', 'view-compact');
+    section.classList.add(`view-${view}`);
+    viewButtons.forEach((btn) => {
+      const active = btn.dataset.view === view;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+    if (view === 'carousel') {
+      trigger.enable();
+      // the active pill here tracks scroll position, not a filter, and
+      // the next onUpdate will resync it -- clearing it would just flash
+      // every pill off until then, wiping out the correct state the
+      // static markup (or the pin's own last position) already has
+    } else {
+      trigger.disable();
+      setActiveFilter(null); // no category selected yet in grid/compact
+    }
+    clearCategoryFilter();
+    ScrollTrigger.refresh();
+    writeViewPref(view);
+  }
+
+  viewButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.view === currentView) return;
+      applyView(btn.dataset.view);
+      // each view's height is completely different, so without this the
+      // switch can leave the page stranded mid-scroll over content that
+      // just moved out from under it
+      if (lenis) lenis.scrollTo(section, { offset: 0, duration: 0.8 });
+    });
+  });
+
+  applyView(readViewPref());
 }
 
 function eventsReveal() {

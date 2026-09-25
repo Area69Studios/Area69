@@ -143,11 +143,37 @@
       <div class="work-head">
         <h2 class="section-title"><span class="outline">Nuestro</span> Trabajo</h2>
         <p class="section-desc">Seis trabajos en cuatro formatos.</p>
-        <div class="work-filters" role="group" aria-label="Saltar a un formato">
-          <button type="button" class="work-filter is-active" data-jump="videos" aria-pressed="true">Vídeos</button>
-          <button type="button" class="work-filter" data-jump="documentales" aria-pressed="false">Documentales</button>
-          <button type="button" class="work-filter" data-jump="cortos" aria-pressed="false">Cortometrajes</button>
-          <button type="button" class="work-filter" data-jump="largos" aria-pressed="false">Largometrajes</button>
+        <div class="work-head-row">
+          <div class="work-filters" role="group" aria-label="Saltar a un formato">
+            <button type="button" class="work-filter is-active" data-jump="videos" aria-pressed="true">Vídeos</button>
+            <button type="button" class="work-filter" data-jump="documentales" aria-pressed="false">Documentales</button>
+            <button type="button" class="work-filter" data-jump="cortos" aria-pressed="false">Cortometrajes</button>
+            <button type="button" class="work-filter" data-jump="largos" aria-pressed="false">Largometrajes</button>
+          </div>
+          <div class="work-views" role="group" aria-label="Vista de Proyectos">
+            <button type="button" class="work-view is-active" data-view="carousel" aria-pressed="true" aria-label="Vista carrusel">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="2" y="5" width="5.5" height="14" rx="1" />
+                <rect x="9.25" y="3" width="5.5" height="18" rx="1" />
+                <rect x="16.5" y="5" width="5.5" height="14" rx="1" />
+              </svg>
+            </button>
+            <button type="button" class="work-view" data-view="grid" aria-pressed="false" aria-label="Vista cuadrícula">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="3" y="3" width="7.5" height="7.5" rx="1" />
+                <rect x="13.5" y="3" width="7.5" height="7.5" rx="1" />
+                <rect x="3" y="13.5" width="7.5" height="7.5" rx="1" />
+                <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1" />
+              </svg>
+            </button>
+            <button type="button" class="work-view" data-view="compact" aria-pressed="false" aria-label="Vista compacta">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       <div class="work-viewport">
