@@ -210,16 +210,47 @@ function workHorizontalScroll(lenis) {
     },
   });
 
+  // Shared by the pills and the keyboard nav below: both need the same
+  // offset-to-scrollY conversion, just aimed at a different element.
+  function jumpTo(offsetLeft, duration) {
+    if (!lenis) return;
+    jumping = true;
+    const distance = getScrollDistance();
+    const progress = distance > 0 ? Math.min(1, offsetLeft / distance) : 0;
+    const y = trigger.start + progress * (trigger.end - trigger.start);
+    lenis.scrollTo(y, { duration, onComplete: () => { jumping = false; } });
+  }
+
   filters.forEach((btn) => {
     btn.addEventListener('click', () => {
       const group = groups.find((g) => g.dataset.group === btn.dataset.jump);
-      if (!group || !lenis) return;
-      jumping = true;
+      if (!group) return;
       setActiveFilter(btn.dataset.jump);
-      const distance = getScrollDistance();
-      const progress = distance > 0 ? Math.min(1, group.offsetLeft / distance) : 0;
-      const y = trigger.start + progress * (trigger.end - trigger.start);
-      lenis.scrollTo(y, { duration: 1.2, onComplete: () => { jumping = false; } });
+      jumpTo(group.offsetLeft, 1.2);
+    });
+  });
+
+  // Arrow-key nav between cards, remote-control style. DOM order already
+  // matches the visual left-to-right order across every group, since the
+  // track is just those groups laid out one after another -- so this
+  // needs no separate index of its own, only the flattened card list.
+  // Scoped to keydown on a card itself (not the whole window) so it never
+  // competes with the arrow keys' native job anywhere else on the page.
+  const cards = gsap.utils.toArray('.work-card');
+  cards.forEach((card, i) => {
+    card.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const target = cards[e.key === 'ArrowRight' ? i + 1 : i - 1];
+      if (!target) return;
+      e.preventDefault();
+      target.focus({ preventScroll: true });
+      // jumpTo sets "jumping", which is also what tells onUpdate to leave
+      // the pills alone -- so without this, arrow nav would land on a
+      // card from a different group while the pill row kept showing
+      // whichever one was active before
+      const group = target.closest('.work-group');
+      if (group) setActiveFilter(group.dataset.group);
+      jumpTo(target.offsetLeft, 0.5);
     });
   });
 }
