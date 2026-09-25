@@ -396,7 +396,7 @@ function initVideoPreviews() {
   if (navigator.connection?.saveData) return;
 
   const hasHover = window.matchMedia('(hover: hover)').matches;
-  const HOVER_DELAY = 2500;
+  const HOVER_DELAY = 1500;
 
   // contentWindow -> the <i> bar to drive, so an infoDelivery message can
   // find its card without searching the dom for it
@@ -481,7 +481,7 @@ function initVideoPreviews() {
     }
 
     /* No hover to hang this off, so the touch equivalent is a hold: press
-       and keep still for the same 2.5s and the preview takes over: lift
+       and keep still for the same 1.5s and the preview takes over: lift
        before then and the tap goes through as a tap. The card's own click
        handler (in departure.js) is what would normally fire on lift, so
        once the hold has actually triggered a preview, that lift's default
