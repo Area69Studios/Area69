@@ -347,7 +347,13 @@ function workHorizontalScroll(lenis) {
       // showing whichever one was active before
       const group = target.closest('.work-group');
       if (group) setActiveFilter(group.dataset.group);
-      jumpTo(target.offsetLeft, 0.5);
+      // The track has its own left padding, so the first card's own
+      // offsetLeft is that padding, not 0 -- jumping to it the same way
+      // as every other card left the track a few dozen px short of its
+      // true start, reachable only by wheel/touch scroll past it. Arrow
+      // nav landing on card zero means "all the way back", so it forces
+      // the real edge instead of the card's own offset.
+      jumpTo(target === cards[0] ? 0 : target.offsetLeft, 0.5);
       return;
     }
 
