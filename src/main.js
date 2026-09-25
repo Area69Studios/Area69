@@ -372,8 +372,19 @@ function workHorizontalScroll(lenis) {
       applyView(btn.dataset.view);
       // each view's height is completely different, so without this the
       // switch can leave the page stranded mid-scroll over content that
-      // just moved out from under it
-      if (lenis) lenis.scrollTo(section, { offset: 0, duration: 0.8 });
+      // just moved out from under it. Lenis.scrollTo(element) resolves
+      // its target as rect.top + its OWN tracked scroll position, not
+      // the page's real one -- disabling the pin just now moved
+      // everything below it without Lenis driving that change, so its
+      // tracked value is stale at exactly this moment and the computed
+      // target lands on whatever now sits at the wrong offset (often the
+      // section after this one). Computing the target from the live,
+      // always-current window.scrollY instead and handing Lenis that
+      // plain number skips its own resolution step entirely.
+      if (lenis) {
+        const y = section.getBoundingClientRect().top + window.scrollY;
+        lenis.scrollTo(y, { duration: 0.8 });
+      }
     });
   });
 
