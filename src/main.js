@@ -360,6 +360,15 @@ function workHorizontalScroll(lenis) {
     } else {
       trigger.disable();
       setActiveFilter(null); // no category selected yet in grid/compact
+      // the pin's onUpdate leaves an inline translateX on the track from
+      // wherever the carousel last was -- gsap.set only ever writes that
+      // property, disabling the trigger doesn't touch it, so grid/compact
+      // inherited it too: every card shifted sideways by that same
+      // amount and #proyectos's own overflow: hidden clipped off
+      // whatever that shift pushed past the edge. Re-entering carousel
+      // doesn't need this cleared itself -- the next onUpdate overwrites
+      // it with a correct value the moment the pin re-engages.
+      gsap.set(track, { clearProps: 'x' });
     }
     clearCategoryFilter();
     ScrollTrigger.refresh();
