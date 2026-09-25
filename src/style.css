@@ -1319,6 +1319,15 @@ textarea {
   margin-top: auto;
 }
 
+/* At this card size (down to ~170px wide) the synopsis has nowhere to
+   go: even capped at max-height: 180px it was taller than the whole
+   card and spilled out past the bottom edge onto the page underneath,
+   cut off mid-sentence. Same call as compact already makes for the
+   same reason, just one size class up. */
+.view-grid .work-synopsis {
+  display: none;
+}
+
 /* A group hidden by the pill filter (grid/compact only -- the carousel
    never hides a card, it scrolls to it instead). */
 .work-card.is-filtered-out {

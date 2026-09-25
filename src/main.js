@@ -122,6 +122,13 @@ function servicesReveal() {
   });
 }
 
+// Read by initVideoPreviews() below, written by workHorizontalScroll()'s
+// applyView() -- the hover/long-press preview is a carousel-only gesture:
+// grid and compact lay every card's poster flat on the page for browsing,
+// not for lingering over one, and an autoplaying preview firing there
+// would compete with normal scrolling instead of rewarding a pause.
+const workView = { current: 'carousel' };
+
 /* The section scrolls sideways, not down, so a pill nav for it cannot use
    the site's usual #anchor + lenis.scrollTo(element): that resolves to
    where a target sits in the vertical flow, and every group here sits at
@@ -344,6 +351,7 @@ function workHorizontalScroll(lenis) {
   // this one's.
   function applyView(view) {
     currentView = view;
+    workView.current = view;
     section.classList.remove('view-carousel', 'view-grid', 'view-compact');
     section.classList.add(`view-${view}`);
     viewButtons.forEach((btn) => {
@@ -633,6 +641,10 @@ function initVideoPreviews() {
     };
 
     const start = () => {
+      // grid/compact lay every poster flat for browsing, not for
+      // lingering over one -- see the workView comment near its
+      // declaration for why this is carousel-only
+      if (workView.current !== 'carousel') return;
       // the source is 16:9 and the card is 3:4; sized and centred like this
       // it covers the card the same way object-fit: cover crops the still
       const h = card.getBoundingClientRect().height;
