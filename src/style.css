@@ -1286,14 +1286,37 @@ textarea {
 
 .view-grid .work-track {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 18px;
   width: 100%;
   padding: 0 clamp(20px, 6vw, 48px);
 }
 
+/* Smaller and denser on purpose: at the carousel's own card width
+   (min(340px, 74vw)) a wrapped grid can end up showing nearly the same
+   few large cards per row as the carousel does, just without the
+   scroll -- the two views then read as the same thing twice. Shrinking
+   the cards fits more per row and makes this one actually look like a
+   wall of posters, not a carousel that stopped moving. */
 .view-grid .work-card {
   width: 100%;
+  padding: 16px;
+}
+
+/* The big index number is a carousel device -- "this is the Nth card
+   you'd scroll to" -- which stops meaning anything once every card is
+   already on screen at once, and at this size it would dwarf the card
+   anyway. */
+.view-grid .work-num {
+  display: none;
+}
+
+/* .work-num was the other flex child holding .work-info down at the
+   card's bottom edge via justify-content: space-between; hiding it
+   would otherwise leave the title stranded at the top instead of
+   anchored over the artwork the way every other view keeps it. */
+.view-grid .work-info {
+  margin-top: auto;
 }
 
 /* A group hidden by the pill filter (grid/compact only -- the carousel
